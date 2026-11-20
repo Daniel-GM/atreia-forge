@@ -1,0 +1,805 @@
+{
+  "source": "Aion2 Exchange",
+  "sourceUrl": "https://aion2.exchange/api/servers",
+  "servers": [
+    {
+      "id": "1101",
+      "name": "Siel",
+      "region": "NAE",
+      "faction": "Elyos",
+      "exchangeId": 11101
+    },
+    {
+      "id": "2101",
+      "name": "Israphel",
+      "region": "NAE",
+      "faction": "Asmodian",
+      "exchangeId": 12101
+    },
+    {
+      "id": "1102",
+      "name": "Nezekan",
+      "region": "NAE",
+      "faction": "Elyos",
+      "exchangeId": 11102
+    },
+    {
+      "id": "2102",
+      "name": "Zikel",
+      "region": "NAE",
+      "faction": "Asmodian",
+      "exchangeId": 12102
+    },
+    {
+      "id": "1103",
+      "name": "Vaizel",
+      "region": "NAE",
+      "faction": "Elyos",
+      "exchangeId": 11103
+    },
+    {
+      "id": "2103",
+      "name": "Triniel",
+      "region": "NAE",
+      "faction": "Asmodian",
+      "exchangeId": 12103
+    },
+    {
+      "id": "1104",
+      "name": "Kaisinel",
+      "region": "NAE",
+      "faction": "Elyos",
+      "exchangeId": 11104
+    },
+    {
+      "id": "2104",
+      "name": "Lumiel",
+      "region": "NAE",
+      "faction": "Asmodian",
+      "exchangeId": 12104
+    },
+    {
+      "id": "1105",
+      "name": "Yustiel",
+      "region": "NAE",
+      "faction": "Elyos",
+      "exchangeId": 11105
+    },
+    {
+      "id": "2105",
+      "name": "Marchutan",
+      "region": "NAE",
+      "faction": "Asmodian",
+      "exchangeId": 12105
+    },
+    {
+      "id": "1106",
+      "name": "Ariel",
+      "region": "NAE",
+      "faction": "Elyos",
+      "exchangeId": 11106
+    },
+    {
+      "id": "2106",
+      "name": "Azphel",
+      "region": "NAE",
+      "faction": "Asmodian",
+      "exchangeId": 12106
+    },
+    {
+      "id": "1107",
+      "name": "Fregion",
+      "region": "NAE",
+      "faction": "Elyos",
+      "exchangeId": 11107
+    },
+    {
+      "id": "2107",
+      "name": "Ereshkigal",
+      "region": "NAE",
+      "faction": "Asmodian",
+      "exchangeId": 12107
+    },
+    {
+      "id": "1108",
+      "name": "Meslamtaeda",
+      "region": "NAE",
+      "faction": "Elyos",
+      "exchangeId": 11108
+    },
+    {
+      "id": "2108",
+      "name": "Beritra",
+      "region": "NAE",
+      "faction": "Asmodian",
+      "exchangeId": 12108
+    },
+    {
+      "id": "1109",
+      "name": "Hithanya",
+      "region": "NAE",
+      "faction": "Elyos",
+      "exchangeId": 11109
+    },
+    {
+      "id": "2109",
+      "name": "Nemon",
+      "region": "NAE",
+      "faction": "Asmodian",
+      "exchangeId": 12109
+    },
+    {
+      "id": "1201",
+      "name": "Siel",
+      "region": "NAW",
+      "faction": "Elyos",
+      "exchangeId": 11201
+    },
+    {
+      "id": "2201",
+      "name": "Israphel",
+      "region": "NAW",
+      "faction": "Asmodian",
+      "exchangeId": 12201
+    },
+    {
+      "id": "1202",
+      "name": "Nezekan",
+      "region": "NAW",
+      "faction": "Elyos",
+      "exchangeId": 11202
+    },
+    {
+      "id": "2202",
+      "name": "Zikel",
+      "region": "NAW",
+      "faction": "Asmodian",
+      "exchangeId": 12202
+    },
+    {
+      "id": "1203",
+      "name": "Vaizel",
+      "region": "NAW",
+      "faction": "Elyos",
+      "exchangeId": 11203
+    },
+    {
+      "id": "2203",
+      "name": "Triniel",
+      "region": "NAW",
+      "faction": "Asmodian",
+      "exchangeId": 12203
+    },
+    {
+      "id": "1204",
+      "name": "Kaisinel",
+      "region": "NAW",
+      "faction": "Elyos",
+      "exchangeId": 11204
+    },
+    {
+      "id": "2204",
+      "name": "Lumiel",
+      "region": "NAW",
+      "faction": "Asmodian",
+      "exchangeId": 12204
+    },
+    {
+      "id": "1205",
+      "name": "Yustiel",
+      "region": "NAW",
+      "faction": "Elyos",
+      "exchangeId": 11205
+    },
+    {
+      "id": "2205",
+      "name": "Marchutan",
+      "region": "NAW",
+      "faction": "Asmodian",
+      "exchangeId": 12205
+    },
+    {
+      "id": "1301",
+      "name": "Siel",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11301
+    },
+    {
+      "id": "2301",
+      "name": "Israphel",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12301
+    },
+    {
+      "id": "1302",
+      "name": "Nezekan",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11302
+    },
+    {
+      "id": "2302",
+      "name": "Zikel",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12302
+    },
+    {
+      "id": "1303",
+      "name": "Vaizel",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11303
+    },
+    {
+      "id": "2303",
+      "name": "Triniel",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12303
+    },
+    {
+      "id": "1304",
+      "name": "Kaisinel",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11304
+    },
+    {
+      "id": "2304",
+      "name": "Lumiel",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12304
+    },
+    {
+      "id": "1305",
+      "name": "Yustiel",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11305
+    },
+    {
+      "id": "2305",
+      "name": "Marchutan",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12305
+    },
+    {
+      "id": "1306",
+      "name": "Ariel",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11306
+    },
+    {
+      "id": "2306",
+      "name": "Azphel",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12306
+    },
+    {
+      "id": "1307",
+      "name": "Fregion",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11307
+    },
+    {
+      "id": "2307",
+      "name": "Ereshkigal",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12307
+    },
+    {
+      "id": "1308",
+      "name": "Meslamtaeda",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11308
+    },
+    {
+      "id": "2308",
+      "name": "Beritra",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12308
+    },
+    {
+      "id": "1309",
+      "name": "Hithanya",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11309
+    },
+    {
+      "id": "2309",
+      "name": "Nemon",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12309
+    },
+    {
+      "id": "1310",
+      "name": "Nania",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11310
+    },
+    {
+      "id": "2310",
+      "name": "Hadala",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12310
+    },
+    {
+      "id": "1311",
+      "name": "Tahavatha",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11311
+    },
+    {
+      "id": "2311",
+      "name": "Ludra",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12311
+    },
+    {
+      "id": "1312",
+      "name": "Luteros",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11312
+    },
+    {
+      "id": "2312",
+      "name": "Ulgorn",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12312
+    },
+    {
+      "id": "1313",
+      "name": "Phernos",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11313
+    },
+    {
+      "id": "2313",
+      "name": "Munin",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12313
+    },
+    {
+      "id": "1314",
+      "name": "Daminu",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11314
+    },
+    {
+      "id": "2314",
+      "name": "Odar",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12314
+    },
+    {
+      "id": "1315",
+      "name": "Kasaka",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11315
+    },
+    {
+      "id": "2315",
+      "name": "Zemurru",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12315
+    },
+    {
+      "id": "1316",
+      "name": "Bakarma",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11316
+    },
+    {
+      "id": "2316",
+      "name": "Kromede",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12316
+    },
+    {
+      "id": "1317",
+      "name": "Tsenka",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11317
+    },
+    {
+      "id": "2317",
+      "name": "Quai",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12317
+    },
+    {
+      "id": "1318",
+      "name": "Kochi",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11318
+    },
+    {
+      "id": "2318",
+      "name": "Baba",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12318
+    },
+    {
+      "id": "1319",
+      "name": "Ishtar",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11319
+    },
+    {
+      "id": "2319",
+      "name": "Fafnir",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12319
+    },
+    {
+      "id": "1320",
+      "name": "Tiamat",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11320
+    },
+    {
+      "id": "2320",
+      "name": "Indnath",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12320
+    },
+    {
+      "id": "1321",
+      "name": "Gauss",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11321
+    },
+    {
+      "id": "2321",
+      "name": "Agnita",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12321
+    },
+    {
+      "id": "1322",
+      "name": "Lamuatan",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11322
+    },
+    {
+      "id": "2322",
+      "name": "Atiel",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12322
+    },
+    {
+      "id": "1323",
+      "name": "Nathara",
+      "region": "EU",
+      "faction": "Elyos",
+      "exchangeId": 11323
+    },
+    {
+      "id": "2323",
+      "name": "Tassin",
+      "region": "EU",
+      "faction": "Asmodian",
+      "exchangeId": 12323
+    },
+    {
+      "id": "1401",
+      "name": "Siel",
+      "region": "LA",
+      "faction": "Elyos",
+      "exchangeId": 11401
+    },
+    {
+      "id": "2401",
+      "name": "Israphel",
+      "region": "LA",
+      "faction": "Asmodian",
+      "exchangeId": 12401
+    },
+    {
+      "id": "1402",
+      "name": "Nezekan",
+      "region": "LA",
+      "faction": "Elyos",
+      "exchangeId": 11402
+    },
+    {
+      "id": "2402",
+      "name": "Zikel",
+      "region": "LA",
+      "faction": "Asmodian",
+      "exchangeId": 12402
+    },
+    {
+      "id": "1403",
+      "name": "Vaizel",
+      "region": "LA",
+      "faction": "Elyos",
+      "exchangeId": 11403
+    },
+    {
+      "id": "2403",
+      "name": "Triniel",
+      "region": "LA",
+      "faction": "Asmodian",
+      "exchangeId": 12403
+    },
+    {
+      "id": "1404",
+      "name": "Kaisinel",
+      "region": "LA",
+      "faction": "Elyos",
+      "exchangeId": 11404
+    },
+    {
+      "id": "2404",
+      "name": "Lumiel",
+      "region": "LA",
+      "faction": "Asmodian",
+      "exchangeId": 12404
+    },
+    {
+      "id": "1405",
+      "name": "Yustiel",
+      "region": "LA",
+      "faction": "Elyos",
+      "exchangeId": 11405
+    },
+    {
+      "id": "2405",
+      "name": "Marchutan",
+      "region": "LA",
+      "faction": "Asmodian",
+      "exchangeId": 12405
+    },
+    {
+      "id": "1406",
+      "name": "Ariel",
+      "region": "LA",
+      "faction": "Elyos",
+      "exchangeId": 11406
+    },
+    {
+      "id": "2406",
+      "name": "Azphel",
+      "region": "LA",
+      "faction": "Asmodian",
+      "exchangeId": 12406
+    },
+    {
+      "id": "1501",
+      "name": "Siel",
+      "region": "AS",
+      "faction": "Elyos",
+      "exchangeId": 11501
+    },
+    {
+      "id": "2501",
+      "name": "Israphel",
+      "region": "AS",
+      "faction": "Asmodian",
+      "exchangeId": 12501
+    },
+    {
+      "id": "1502",
+      "name": "Nezekan",
+      "region": "AS",
+      "faction": "Elyos",
+      "exchangeId": 11502
+    },
+    {
+      "id": "2502",
+      "name": "Zikel",
+      "region": "AS",
+      "faction": "Asmodian",
+      "exchangeId": 12502
+    },
+    {
+      "id": "1503",
+      "name": "Vaizel",
+      "region": "AS",
+      "faction": "Elyos",
+      "exchangeId": 11503
+    },
+    {
+      "id": "2503",
+      "name": "Triniel",
+      "region": "AS",
+      "faction": "Asmodian",
+      "exchangeId": 12503
+    },
+    {
+      "id": "1504",
+      "name": "Kaisinel",
+      "region": "AS",
+      "faction": "Elyos",
+      "exchangeId": 11504
+    },
+    {
+      "id": "2504",
+      "name": "Lumiel",
+      "region": "AS",
+      "faction": "Asmodian",
+      "exchangeId": 12504
+    },
+    {
+      "id": "1505",
+      "name": "Yustiel",
+      "region": "AS",
+      "faction": "Elyos",
+      "exchangeId": 11505
+    },
+    {
+      "id": "2505",
+      "name": "Marchutan",
+      "region": "AS",
+      "faction": "Asmodian",
+      "exchangeId": 12505
+    },
+    {
+      "id": "1506",
+      "name": "Ariel",
+      "region": "AS",
+      "faction": "Elyos",
+      "exchangeId": 11506
+    },
+    {
+      "id": "2506",
+      "name": "Azphel",
+      "region": "AS",
+      "faction": "Asmodian",
+      "exchangeId": 12506
+    },
+    {
+      "id": "1507",
+      "name": "Fregion",
+      "region": "AS",
+      "faction": "Elyos",
+      "exchangeId": 11507
+    },
+    {
+      "id": "2507",
+      "name": "Ereshkigal",
+      "region": "AS",
+      "faction": "Asmodian",
+      "exchangeId": 12507
+    },
+    {
+      "id": "1508",
+      "name": "Meslamtaeda",
+      "region": "AS",
+      "faction": "Elyos",
+      "exchangeId": 11508
+    },
+    {
+      "id": "2508",
+      "name": "Beritra",
+      "region": "AS",
+      "faction": "Asmodian",
+      "exchangeId": 12508
+    },
+    {
+      "id": "1509",
+      "name": "Hithanya",
+      "region": "AS",
+      "faction": "Elyos",
+      "exchangeId": 11509
+    },
+    {
+      "id": "2509",
+      "name": "Nemon",
+      "region": "AS",
+      "faction": "Asmodian",
+      "exchangeId": 12509
+    },
+    {
+      "id": "1510",
+      "name": "Nania",
+      "region": "AS",
+      "faction": "Elyos",
+      "exchangeId": 11510
+    },
+    {
+      "id": "2510",
+      "name": "Hadala",
+      "region": "AS",
+      "faction": "Asmodian",
+      "exchangeId": 12510
+    }
+  ],
+  "locales": [
+    {
+      "code": "pt",
+      "name": "Português",
+      "language": "pt-BR"
+    },
+    {
+      "code": "en",
+      "name": "English",
+      "language": "en"
+    },
+    {
+      "code": "de",
+      "name": "Deutsch",
+      "language": "de"
+    },
+    {
+      "code": "es",
+      "name": "Español",
+      "language": "es"
+    },
+    {
+      "code": "fr",
+      "name": "Français",
+      "language": "fr"
+    },
+    {
+      "code": "ja",
+      "name": "日本語",
+      "language": "ja"
+    },
+    {
+      "code": "ko",
+      "name": "한국어",
+      "language": "ko"
+    },
+    {
+      "code": "ru",
+      "name": "Русский",
+      "language": "ru"
+    },
+    {
+      "code": "en-nc",
+      "name": "[KR/TW] English",
+      "language": "en-TW"
+    },
+    {
+      "code": "ko-nc",
+      "name": "[KR/TW] 한국어",
+      "language": "ko"
+    },
+    {
+      "code": "zh-nc",
+      "name": "[KR/TW] 繁體中文",
+      "language": "zh-Hant"
+    }
+  ]
+}
