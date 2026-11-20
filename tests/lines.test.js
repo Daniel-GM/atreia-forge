@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { backupOf, readBackup } from '../shared/backup.js';
 import { goldProgression, lineEstimate, lineMarketItems, recipeSuggestions } from '../shared/lines.js';
 import { attemptsFromBatch } from '../shared/crafting.js';
+import { parseMarketFee } from '../shared/quantities.js';
 import { applyChange, craftOutputs, emptyWorkshop, indexCatalog, MAX_STOCK } from '../shared/planner.js';
 
 const catalog = indexCatalog(JSON.parse(readFileSync(new URL('../public/data/catalog.json', import.meta.url))));
@@ -183,6 +184,69 @@ const salePrices = {
   ...Object.fromEntries(lineMarketItems(line, catalog).map(({ itemId }) => [itemId, 10])),
   [brilliant]: 100, [second.itemId]: 300, [second.combo.itemId]: 500,
 };
+
+test('market fee accepts localized percentages and survives server changes and legacy backups', () => {
+  for (const [text, rate] of [['', 0], ['0', 0], ['7,5', 750], ['7.50%', 750], [',05', 5], ['12,34', 1234], ['100.00', 10000]]) {
+    assert.equal(parseMarketFee(text), rate);
+  }
+  for (const value of ['-1', '100,01', '0.125', '1e2', '7,5.2', 'abc', '%']) assert.equal(parseMarketFee(value), null);
+  const setFee = (ws, server, bps) => applyChange(ws, { type: 'marketFee', server, bps }, catalog);
+  const saved = setFee(setFee(state, '1406', 1250), '1306', 300);
+  const copy = backupOf(saved);
+  const { marketFees, ...legacy } = copy.workshop;
+  const restored = applyChange(state, { type: 'import', file: copy }, catalog);
+  assert.deepEqual(restored.marketFees, { 1406: 1250, 1306: 300 });
+  assert.deepEqual(applyChange(saved, { type: 'import', file: { ...copy, workshop: legacy } }, catalog).marketFees, saved.marketFees);
+  const reset = backupOf(setFee(state, '1406', 0));
+  assert.deepEqual(applyChange(saved, { type: 'import', file: reset }, catalog).marketFees, { 1406: 0, 1306: 300 });
+  for (const bps of [-1, 10001, 1.23, '750']) {
+    assert.throws(() => setFee(state, '1406', bps));
+    assert.throws(() => readBackup({ ...copy, workshop: { ...legacy, marketFees: { 1406: bps } } }, catalog));
+  }
+});
+
+test('net alternatives deduct the selling fee on both tiers and leave input costs at full price', () => {
+  const ws = { ...state, stock: { [second.materials[1].itemId]: 1000 }, marketFees: { 1406: 1000 } };
+  const quotes = { ...salePrices, [brilliant]: 243 };
+  const taxed = lineEstimate(line, catalog, ws, '1406', quotes);
+  const gross = lineEstimate(line, catalog, ws, '1306', quotes);
+  const { now, next } = taxed.stages[0].sale;
+  assert.deepEqual([now.value, now.fee, now.net], [3888n, 389n, 3499n]);
+  assert.deepEqual(next.products.map(p => [p.net, p.fee]), [[3240n, 360n], [1800n, 200n]]);
+  assert.deepEqual([next.extraCost, next.netRevenue, next.saleFee, next.netReturn, next.difference], [1600n, 5040n, 560n, 3440n, -59n]);
+  assert.equal(gross.stages[0].sale.next.difference, 112n);
+  assert.deepEqual([taxed.cash, taxed.inputs], [gross.cash, gross.inputs]);
+  const partial = lineEstimate({ steps: [line.steps[0]] }, catalog, ws, '1406', { [brilliant]: 100 });
+  assert.deepEqual(partial.market, { value: 1440n, quoted: 1, unpriced: 1 });
+  const unpriced = lineEstimate(line, catalog, ws, '1406', { ...quotes, [second.combo.itemId]: null }).stages[0].sale;
+  assert.deepEqual([unpriced.now.net, unpriced.next.netRevenue, unpriced.next.difference], [3499n, null, null]);
+  const allFee = lineEstimate(line, catalog, { ...ws, marketFees: { 1406: 10000 } }, '1406', quotes).stages[0].sale;
+  assert.deepEqual([allFee.now.net, allFee.next.netRevenue, allFee.next.difference], [0n, 0n, -1600n]);
+});
+
+test('round each sold lot in whole Kinah and compare the full stop and continue scenarios', () => {
+  const ws = { ...state, marketFees: { 1406: 1234 } };
+  const small = { steps: [{ ...line.steps[0], count: 4, combos: 3 }, { ...line.steps[1], count: 2, combos: 1 }] };
+  const quotes = { ...Object.fromEntries(Object.keys(salePrices).map(id => [id, 0])), [brilliant]: 1, [second.itemId]: 1, [second.combo.itemId]: 1 };
+  const { now, next } = lineEstimate(small, catalog, ws, '1406', quotes).stages[0].sale;
+  assert.deepEqual([now.net, next.leftover.quantity, next.leftover.net, next.forgoneNet], [2n, 1, 0n, 2n]);
+  assert.deepEqual([next.revenue, next.saleFee, next.netReturn, next.difference], [2n, 2n, 0n, -2n]);
+  const many = { steps: [{ ...line.steps[0], count: 9999, combos: 9999 }] };
+  const large = lineEstimate(many, catalog, ws, '1406', { [brilliant]: 99_999_999_999 }).stages[0].sale.now;
+  assert.equal(large.net, 9999n * 99_999_999_999n * 8766n / 10000n);
+});
+
+test('extra Brilliants, actual combo counts, and a preview use the fee for the selected server', () => {
+  const ws = { ...state, marketFees: { 1406: 1000 }, stock: { [brilliant]: 13 } };
+  const short = { steps: line.steps.map((s, i) => i ? s : { ...s, combos: 3 }) };
+  const { next } = lineEstimate(short, catalog, ws, '1406', salePrices).stages[0].sale;
+  assert.deepEqual([next.used, next.extraCost, next.netReturn, next.difference], [3, 2900n, 2140n, 1870n]);
+  const actual = applyChange({ ...executing(), marketFees: ws.marketFees }, firstCraft, catalog);
+  const done = lineEstimate(actual.lines[line.id], catalog, actual, '1406', salePrices).stages[0].sale;
+  assert.deepEqual([done.now.net, done.next.count, done.next.netReturn, done.next.difference], [1170n, 13, 2750n, 1580n]);
+  const preview = lineEstimate({ steps: [line.steps[0]] }, catalog, ws, '1406', salePrices).stages[0].sale;
+  assert.deepEqual([preview.next.index, preview.next.netReturn, preview.next.difference], [null, 3440n, 2000n]);
+});
 
 test('continuing compares both next-tier outputs with the materials and the forgone Brilliant sale', () => {
   const stocked = { ...state, stock: Object.fromEntries(second.materials.map(m => [m.itemId, 999])) };

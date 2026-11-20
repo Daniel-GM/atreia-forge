@@ -1,6 +1,6 @@
 import { unitQuote } from './planner.js';
 import { attemptsFromBatch, craftOutputs, materialOptions, requirements } from './crafting.js';
-import { integer, MAX_CRAFTS } from './quantities.js';
+import { integer, MAX_CRAFTS, MAX_MARKET_FEE_BPS } from './quantities.js';
 
 const tiers = ['common', 'rare', 'epic', 'unique'];
 function consumes(recipe, itemId) {
@@ -87,10 +87,13 @@ export function recipeSuggestions(recipe, catalog, faction, anchor) {
 
 function add(map, id, amount) { map[id] = (map[id] || 0) + amount; }
 const total = () => ({ value: 0n, quoted: 0, unpriced: 0 });
-function addCost(sum, units, price) {
-  if (!units) return;
-  if (price == null) sum.unpriced++;
-  else { sum.value += BigInt(units) * BigInt(price); sum.quoted++; }
+function lotValue(units, price) {
+  if (!units) return 0n;
+  return price == null ? null : BigInt(units) * BigInt(price);
+}
+function addValue(sum, value) {
+  if (value == null) sum.unpriced++;
+  else { sum.value += value; sum.quoted++; }
 }
 
 // Match the first later recipe that takes this exact output. At the end of a
@@ -116,19 +119,19 @@ export function lineSaleTargets(line, catalog) {
   return targets;
 }
 
-function fullValue(lots) {
+function fullValue(lots, field = 'value') {
   let value = 0n;
   for (const lot of lots) {
-    if (lot.value == null) return null;
-    value += lot.value;
+    if (lot[field] == null) return null;
+    value += lot[field];
   }
   return value;
 }
 
-function compareSale(stage, target, stages, stock, priceLot) {
+function compareSale(stage, target, stages, stock, priceLot, saleLot) {
   const saleId = stage.recipe.combo?.itemId ?? stage.recipe.itemId;
   const quantity = stage.outputs.find(row => row.itemId === saleId)?.quantity ?? 0;
-  const now = priceLot(saleId, quantity);
+  const now = saleLot(saleId, quantity);
   if (!target) return { now, next: null };
 
   const planned = target.index == null ? null : stages[target.index];
@@ -143,19 +146,35 @@ function compareSale(stage, target, stages, stock, priceLot) {
     const units = row.required - (row.itemId === saleId ? used : 0);
     if (units > 0) extra.push(priceLot(row.itemId, units));
   }
-  const products = outputs.map(out => priceLot(out.itemId, out.quantity));
+  const products = outputs.map(out => saleLot(out.itemId, out.quantity));
   const extraCost = fullValue(extra);
-  const revenue = fullValue(products);
   const forgone = priceLot(saleId, used);
-  // Unused Brilliants can be sold on either path. Only those exchanged for
-  // the next tier are forgone; extra units bought or taken from stock cost Kinah too.
-  const cost = extraCost != null && forgone.value != null ? extraCost + forgone.value : null;
-  const difference = used > 0 && cost != null && revenue != null ? revenue - cost : null;
-  return { now, next: { recipe, index: target.index, recorded: !!planned?.step.done, count, used, forgone,
-    extra, extraCost, cost, products, revenue, difference } };
+  const leftover = saleLot(saleId, quantity - used);
+  const revenue = fullValue(products);
+  const netRevenue = fullValue(products, 'net');
+  const saleFee = fullValue(products, 'fee');
+  // Compare whole alternatives. Charging a fee on the consumed portion separately
+  // would sometimes lose a Kinah when the rest of the same lot can still be sold.
+  const forgoneNet = used === 0 ? 0n : now.net == null ? null : now.net - leftover.net;
+  const cost = extraCost != null && forgoneNet != null ? extraCost + forgoneNet : null;
+  const netReturn = netRevenue != null && leftover.net != null && extraCost != null ? netRevenue + leftover.net - extraCost : null;
+  const difference = used > 0 && now.net != null && netReturn != null ? netReturn - now.net : null;
+  return { now, next: { recipe, index: target.index, recorded: !!planned?.step.done, count, used, forgone, forgoneNet, leftover,
+    extra, extraCost, cost, products, revenue, saleFee, netRevenue, netReturn, difference } };
 }
 
 export function lineEstimate(line, catalog, workshop, server, quotes = {}, targets = lineSaleTargets(line, catalog)) {
+  const marketFeeBps = integer(workshop.marketFees?.[server], MAX_MARKET_FEE_BPS);
+  function priceLot(itemId, quantity) {
+    const quote = unitQuote(itemId, workshop, server, quotes);
+    return { itemId, quantity, ...quote, value: lotValue(quantity, quote.price) };
+  }
+  function saleLot(itemId, quantity) {
+    const lot = priceLot(itemId, quantity);
+    // The estimate settles one lot per item in whole Kinah, rounding proceeds down.
+    const net = lot.value == null ? null : lot.value * BigInt(MAX_MARKET_FEE_BPS - marketFeeBps) / BigInt(MAX_MARKET_FEE_BPS);
+    return { ...lot, net, fee: net == null ? null : lot.value - net };
+  }
   const owned = { ...workshop.stock };
   const made = {};
   const materials = new Map();
@@ -206,25 +225,21 @@ export function lineEstimate(line, catalog, workshop, server, quotes = {}, targe
   }
   const cash = total(), inputs = total(), market = total();
   for (const row of materials.values()) {
-    addCost(cash, row.missing, row.price);
-    addCost(inputs, row.missing + row.fromStock, row.price);
+    if (row.missing) addValue(cash, lotValue(row.missing, row.price));
+    const external = row.missing + row.fromStock;
+    if (external) addValue(inputs, lotValue(external, row.price));
   }
   const final = (stages.at(-1)?.outputs || []).map(output => {
-    const quote = unitQuote(output.itemId, workshop, server, quotes);
-    addCost(market, output.quantity, quote.price);
-    return { ...output, ...quote };
+    const lot = saleLot(output.itemId, output.quantity);
+    addValue(market, lot.net);
+    return lot;
   });
   for (const { itemId, quantity } of final) made[itemId] = Math.max(0, (made[itemId] || 0) - quantity);
   const producedIds = new Set(stages.flatMap(stage => stage.outputs.map(output => output.itemId)));
   const retained = [...producedIds].filter(itemId => made[itemId] > 0).map(itemId =>
     ({ itemId, quantity: made[itemId], ...unitQuote(itemId, workshop, server, quotes) }));
-  function priceLot(itemId, quantity) {
-    const { price } = unitQuote(itemId, workshop, server, quotes);
-    const value = !quantity ? 0n : price == null ? null : BigInt(quantity) * BigInt(price);
-    return { itemId, quantity, price, value };
-  }
-  for (const [i, stage] of stages.entries()) stage.sale = compareSale(stage, targets[i], stages, workshop.stock, priceLot);
-  return { stages, rows: [...materials.values()], cash, inputs, market, final, retained };
+  for (const [i, stage] of stages.entries()) stage.sale = compareSale(stage, targets[i], stages, workshop.stock, priceLot, saleLot);
+  return { stages, rows: [...materials.values()], cash, inputs, market, marketFeeBps, final, retained };
 }
 
 export function lineMarketItems(line, catalog, targets = lineSaleTargets(line, catalog)) {

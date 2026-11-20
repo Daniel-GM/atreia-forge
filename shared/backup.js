@@ -1,8 +1,8 @@
 import { checkedLine } from './line-state.js';
-import { MAX_CRAFTS, MAX_PRICE, MAX_STOCK } from './quantities.js';
+import { MAX_CRAFTS, MAX_PRICE, MAX_STOCK, validMarketFeeBps } from './quantities.js';
 
-export function backupOf({ stock, saved, prices, lines = {} }) {
-  return { format: 'atreia-forge', version: 1, workshop: { stock, saved, prices, lines } };
+export function backupOf({ stock, saved, prices, lines = {}, marketFees = {} }) {
+  return { format: 'atreia-forge', version: 1, workshop: { stock, saved, prices, lines, marketFees } };
 }
 
 function entries(object) {
@@ -22,8 +22,12 @@ function numbers(map, allowed, min, max) {
 export function readBackup(file, catalog) {
   try {
     if (file?.format !== 'atreia-forge' || file.version !== 1) throw new Error();
-    const { stock, saved, prices, lines = {} } = file.workshop;
-    const clean = { stock: numbers(stock, catalog.items, 0, MAX_STOCK), saved: numbers(saved, catalog.byId, 1, MAX_CRAFTS), prices: {}, lines: {} };
+    const { stock, saved, prices, lines = {}, marketFees = {} } = file.workshop;
+    const clean = { stock: numbers(stock, catalog.items, 0, MAX_STOCK), saved: numbers(saved, catalog.byId, 1, MAX_CRAFTS), prices: {}, lines: {}, marketFees: {} };
+    for (const [server, bps] of entries(marketFees)) {
+      if (!/^\d{1,8}$/.test(server) || !validMarketFeeBps(bps)) throw new Error();
+      clean.marketFees[server] = bps;
+    }
     for (const [server, map] of entries(prices)) {
       if (!/^\d{1,8}$/.test(server)) throw new Error();
       clean.prices[server] = numbers(map, catalog.items, 0, MAX_PRICE);
@@ -40,5 +44,6 @@ export function mergeBackup(state, file, catalog) {
   const incoming = readBackup(file, catalog);
   const prices = { ...state.prices };
   for (const [server, map] of Object.entries(incoming.prices)) prices[server] = { ...prices[server], ...map };
-  return { stock: { ...state.stock, ...incoming.stock }, saved: { ...state.saved, ...incoming.saved }, lines: { ...state.lines, ...incoming.lines }, prices, lastCraft: null };
+  return { stock: { ...state.stock, ...incoming.stock }, saved: { ...state.saved, ...incoming.saved }, lines: { ...state.lines, ...incoming.lines },
+    marketFees: { ...state.marketFees, ...incoming.marketFees }, prices, lastCraft: null };
 }

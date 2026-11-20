@@ -1,11 +1,11 @@
-import { integer, MAX_CRAFTS, MAX_PRICE, MAX_STOCK } from './quantities.js';
+import { integer, MAX_CRAFTS, MAX_PRICE, MAX_STOCK, validMarketFeeBps } from './quantities.js';
 import { completeStep, editLines, undoStep } from './line-state.js';
 import { craftOutputs, requirements } from './crafting.js';
 import { mergeBackup } from './backup.js';
 export { craftOutputs, requirements, integer, MAX_CRAFTS, MAX_PRICE, MAX_STOCK };
 
 export function emptyWorkshop() {
-  return { stock: {}, saved: {}, prices: {}, lines: {}, lastCraft: null };
+  return { stock: {}, saved: {}, prices: {}, marketFees: {}, lines: {}, lastCraft: null };
 }
 
 export function indexCatalog(catalog) {
@@ -49,6 +49,10 @@ export function applyChange(state, action, catalog) {
     return { ...state, lines, lastCraft: restarted ? null : state.lastCraft };
   }
   if (type === 'import') return mergeBackup(state, action.file, catalog);
+  if (type === 'marketFee') {
+    if (!/^\d{1,8}$/.test(action.server) || !validMarketFeeBps(action.bps)) throw new Error('marketFee');
+    return { ...state, marketFees: { ...state.marketFees, [action.server]: action.bps } };
+  }
   if (type === 'stock' || type === 'price') {
     if (!Object.hasOwn(catalog.items, itemId)) throw new Error('item');
     if (type === 'stock') {

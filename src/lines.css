@@ -40,6 +40,14 @@
 .line-heading h2 > svg { color: var(--lilac); }
 .line-heading .text-button { gap: 4px; min-height: 30px; }
 .line-hint { color: var(--muted); font-size: .82rem; line-height: 1.5; padding: 13px 15px 3px; }
+.market-fee { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 5px 14px; margin: 14px 15px 0; padding: 10px 12px; background: #23202a; border: 1px solid #48404f; border-radius: 8px; }
+.market-fee label { color: var(--text); font-size: .92rem; font-weight: 600; }
+.market-fee p { font-size: .8rem; line-height: 1.4; color: var(--muted); margin-top: 3px; }
+.fee-input { display: flex; align-items: center; gap: 3px; padding-right: 8px; background: #151419; border: 1px solid #584c61; border-radius: 6px; }
+.fee-input:focus-within { border-color: var(--lilac); }
+.fee-input input { width: 4.1rem; min-height: 40px; padding: 0 2px 0 5px; text-align: end; background: transparent; font-size: 1rem; color: var(--text); font-variant-numeric: tabular-nums; }
+.fee-input span { color: var(--muted); font-size: .88rem; }
+.market-fee .fee-error { grid-column: 1/-1; color: #ffa8a4; }
 .stages { padding: 6px 13px 14px 10px; }
 .stages > li { display: grid; grid-template-columns: 13px minmax(0, 1fr); gap: 7px; }
 .stage-rail { position: relative; display: flex; justify-content: center; padding-top: 24px; }
@@ -150,6 +158,7 @@
 .stage-sale { grid-column: 1/-1; min-width: 0; padding: 10px 12px; border: 1px solid #3f3746; border-radius: 7px; background: #1a181f; }
 .sale-now, .sale-verdict, .sale-cost-total { display: flex; align-items: center; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
 .sale-now > div { flex: 1 1 140px; min-width: 0; }
+.sale-now > .sale-payout { flex: 0 1 auto; text-align: end; margin-left: auto; }
 .sale-now strong { display: block; color: var(--text); font-size: .83rem; font-weight: 600; }
 .sale-now small, .sale-target, .sale-metrics dt, .sale-verdict small, .sale-lots li, .sale-breakdown p { color: var(--muted); font-size: .75rem; line-height: 1.4; }
 .sale-now small { display: block; margin-top: 2px; overflow-wrap: anywhere; }
@@ -179,6 +188,16 @@
 .sale-lots li > span { min-width: 0; overflow-wrap: anywhere; }
 .sale-lots .unit-price { min-height: 26px; margin: 0 0 0 auto; }
 .sale-cost-total { border-block: 1px solid var(--line); padding: 6px 0; }
+.sale-forgone, .sale-equation { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 10px; font-size: .8rem; margin-bottom: 8px; }
+.sale-forgone { color: var(--muted); }
+.sale-equation { color: var(--text); font-variant-numeric: tabular-nums; }
+.sale-receipt { margin: 4px 0 10px; padding: 8px 10px; background: #222028; border-radius: 5px; font-size: .81rem; }
+.sale-receipt > strong { display: block; color: var(--text); margin-bottom: 4px; }
+.sale-receipt dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 10px; padding: 3px 0; }
+.sale-receipt dt { color: var(--muted); }
+.sale-receipt dd { margin-left: auto; text-align: end; }
+.sale-receipt .receipt-total { border-top: 1px solid var(--line); margin-top: 3px; padding-top: 5px; font-weight: 600; }
+.sale-receipt .receipt-total dt { color: var(--text); }
 .carry-stock svg { flex: none; }
 .restart-line { margin: 0 15px 14px; color: var(--muted); min-height: 32px; }
 .confirm-materials .number-field { width: 70px; }

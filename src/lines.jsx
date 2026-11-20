@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useId, useMemo, useState } from 'react';
 import { ArrowDown, ArrowRight, ArrowUp, Check, ChevronDown, ChevronRight, CirclePlus, Clock3, ExternalLink, Gem, Hammer, Layers3, ListPlus, ListTree, PackageCheck, Pencil, Plus, RefreshCw, RotateCcw, ScrollText, ShoppingBasket, Trash2 } from 'lucide-react';
 import { goldProgression, lineEstimate, lineMarketItems, lineSaleTargets } from '../shared/lines.js';
 import { estimate, MAX_CRAFTS } from '../shared/planner.js';
 import { attemptsFromBatch } from '../shared/crafting.js';
+import { parseMarketFee } from '../shared/quantities.js';
 import { itemName, useMarket } from './data.js';
 import { gradeName } from './i18n.js';
 import { CraftDialog, PriceDialog } from './recipes.jsx';
@@ -56,6 +57,26 @@ function ResultList({ entries, catalog, language, t, format, onPrice }) {
   })}</ul>;
 }
 
+function MarketFeeField({ bps, onChange, t, format }) {
+  const id = useId();
+  const [draft, setDraft] = useState(null);
+  const invalid = draft != null && parseMarketFee(draft) == null;
+  return <div className="market-fee">
+    <div><label htmlFor={id}>{t('marketFee')}<span className="sr-only"> (%)</span></label><p id={id + '-hint'}>{t('saleBasis')}</p></div>
+    <div className="fee-input"><input id={id} type="text" inputMode="decimal" autoComplete="off"
+      value={draft ?? format(bps / 100)} aria-invalid={invalid || undefined}
+      aria-describedby={id + (invalid ? '-error' : '-hint')} onFocus={e => e.target.select()}
+      onChange={e => {
+        const raw = e.target.value;
+        setDraft(raw);
+        const next = parseMarketFee(raw);
+        if (next != null) onChange(next);
+      }} onBlur={() => setDraft(null)} onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }}/>
+      <span aria-hidden="true">%</span></div>
+    {invalid && <p id={id + '-error'} role="status" className="fee-error">{t('feeRange')}</p>}
+  </div>;
+}
+
 export function Lines({ catalog, workshop, lineId, onSelect, language, locale, server, snapshot, t, format, profession, notify }) {
   const entries = Object.values(workshop.state.lines);
   const line = workshop.state.lines[lineId] || entries[0];
@@ -73,6 +94,7 @@ export function Lines({ catalog, workshop, lineId, onSelect, language, locale, s
   const ids = useMemo(() => lineMarketItems(line || empty, catalog, targets), [line, catalog, targets]);
   const market = useMarket(server.id, ids, snapshot);
   const plan = useMemo(() => lineEstimate(line || empty, catalog, workshop.state, server.id, market.prices, targets), [line, catalog, workshop.state, server.id, market.prices, targets]);
+  const feeLabel = t('marketFee') + ' · ' + format(plan.marketFeeBps / 100) + '%';
   const close = () => setDialog('');
   const activeStep = stepContext?.lineId === line?.id ? line?.steps.find(s => s.id === stepContext?.stepId) : null;
   const currentRecipe = activeStep && catalog.byId[activeStep.recipeId];
@@ -117,7 +139,9 @@ export function Lines({ catalog, workshop, lineId, onSelect, language, locale, s
         <button className="icon-button" title={t('deleteLine')} aria-label={t('deleteLine')} onClick={() => setDialog('delete')}><Trash2 size={16}/></button>
         <button className="button secondary" onClick={() => startName('new')}><Plus size={15}/>{t('newLine')}</button></div>
       <div className="line-layout"><section className="panel stage-panel"><div className="line-heading"><h2><Layers3 size={19}/>{t('stages')} <span className="count-badge">{format(line.steps.length)}</span></h2><button className="text-button" onClick={() => setDialog('pick')}><Plus size={15}/>{t('addRecipe')}</button></div>
-        {plan.stages.length ? <><p className="line-hint">{t('projectionHint')} {t('saleBasis')}</p><ol className="stages">{plan.stages.map(({ step, recipe, combos, outputs, carried, sale }, i) => {
+        {plan.stages.length ? <><MarketFeeField key={server.id} bps={plan.marketFeeBps} {...{ t, format }}
+          onChange={bps => workshop.change({ type: 'marketFee', server: server.id, bps })}/>
+          <p className="line-hint">{t('projectionHint')}</p><ol className="stages">{plan.stages.map(({ step, recipe, combos, outputs, carried, sale }, i) => {
           const item = catalog.items[recipe.itemId];
           const title = itemName(item, language);
           return <li key={step.id}><div className="stage-rail"><i className={'tier-dot grade-' + item.grade}/></div><div className={'stage-card' + (step.done ? ' stage-finished' : '')}>
@@ -128,7 +152,7 @@ export function Lines({ catalog, workshop, lineId, onSelect, language, locale, s
               {recipe.combo && !step.done && <div className="combo-control"><NumberField maximum={step.count} value={combos} label={t('plannedCombos') + ' · ' + title} onChange={value => edit('lineCombos', step, { value })}/><button className="text-button" disabled={step.combos == null} onClick={() => edit('lineCombos', step, { value: null })}>{t('autoCombos')}</button></div>}
               {outputs.map(out => <small key={out.itemId}>{format(out.quantity)} × {itemName(catalog.items[out.itemId], language)}</small>)}
             </details>
-            <StageSale {...{ sale, catalog, language, format, t }} onPrice={price} loading={market.busy}/>
+            <StageSale {...{ sale, catalog, language, format, t, feeLabel }} onPrice={price} loading={market.busy}/>
             <div className="stage-footer">{step.done ? <div className="stage-status"><Check size={15}/>{t('stageDone')}{workshop.state.lastCraft?.receipt === step.done.receipt && <button className="text-button" onClick={async () => { if (await workshop.change({ type: 'undo', receipt: step.done.receipt })) notify({ label: 'undone' }); }}>{t('undo')}</button>}</div>
               : <button className="button stage-craft" disabled={!step.count} onClick={() => openStep('record', step)} aria-label={t('craft') + ' · ' + title}><Hammer size={15}/>{t('craft')}</button>}
             <div className="stage-tools">{[[ArrowUp, 'moveUp', -1, i === 0], [ArrowDown, 'moveDown', 1, i === line.steps.length - 1]].map(([Icon, key, direction, disabled]) =>
@@ -138,7 +162,7 @@ export function Lines({ catalog, workshop, lineId, onSelect, language, locale, s
         })}</ol>{line.steps.some(s => s.done) && <button className="text-button restart-line" onClick={() => setDialog('restart')}><RotateCcw size={14}/>{t('restartLine')}</button>}</> : <div className="empty-state"><CirclePlus size={25}/><p>{t('noSteps')}</p></div>}
       </section>
       {plan.stages.length > 0 && <section className="panel comparison"><div className="line-heading"><h2><Gem size={19}/>{t('buyVsCraft')}</h2></div>
-        <div className="compare-metrics">{[[plan.cash,'cashCost','toBuy'],[plan.inputs,'inputValue','externalInputs'],[plan.market,'finalMarket','targetBatch']].map(([sum,label,hint]) => <div className="metric" key={label}><span>{t(label)}<small>{t(hint)}</small></span><div><Amount sum={sum} format={format} t={t}/></div></div>)}</div>
+        <div className="compare-metrics">{[[plan.cash,'cashCost',t('toBuy')],[plan.inputs,'inputValue',t('externalInputs')],[plan.market,'finalMarket',feeLabel]].map(([sum,label,hint]) => <div className="metric" key={label}><span>{t(label)}<small>{hint}</small></span><div><Amount sum={sum} format={format} t={t}/></div></div>)}</div>
         <ResultList entries={plan.final} {...{ catalog, language, t, format }} onPrice={price}/>
         {!!plan.retained.length && <details className="retained"><summary>{t('retainedProducts')} <ChevronDown size={13}/></summary><ResultList entries={plan.retained} {...{ catalog, language, t, format }} onPrice={price}/></details>}
         <footer className="quote-foot"><span className={'quote-status ' + status}><Clock3 size={13}/>{t(status)}{time && ' · ' + time}</span><a href="https://aion2.exchange/api/docs" target="_blank" rel="noreferrer">Aion2 Exchange <ExternalLink size={11}/></a><button className="refresh-button" onClick={market.refresh} disabled={market.busy} aria-label={t('refresh')}><RefreshCw size={14}/></button></footer>
