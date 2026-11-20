@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowDown, ArrowRight, ArrowUp, Check, ChevronDown, ChevronRight, CirclePlus, Clock3, ExternalLink, Gem, Hammer, Layers3, ListPlus, ListTree, PackageCheck, Pencil, Plus, RefreshCw, RotateCcw, ScrollText, ShoppingBasket, Trash2 } from 'lucide-react';
-import { goldProgression, lineEstimate, lineMarketItems } from '../shared/lines.js';
+import { goldProgression, lineEstimate, lineMarketItems, lineSaleTargets } from '../shared/lines.js';
 import { estimate, MAX_CRAFTS } from '../shared/planner.js';
 import { attemptsFromBatch } from '../shared/crafting.js';
 import { itemName, useMarket } from './data.js';
@@ -8,6 +8,7 @@ import { gradeName } from './i18n.js';
 import { CraftDialog, PriceDialog } from './recipes.jsx';
 import { Coin, ItemIcon, Modal, NumberField } from './ui.jsx';
 import { LineRecipePicker, withIds } from './line-picker.jsx';
+import { StageSale } from './stage-sale.jsx';
 
 const empty = { steps: [] };
 function Sequence({ steps, catalog, language, format }) {
@@ -68,9 +69,10 @@ export function Lines({ catalog, workshop, lineId, onSelect, language, locale, s
     const ruby = recipes.find(r => r.profession === 'handicrafting' && r.category === 'necklace' && catalog.items[r.itemId].grade === 'common' && r.mechanism === 'craft');
     return goldProgression(ruby, catalog);
   }, [recipes, catalog]);
-  const ids = useMemo(() => lineMarketItems(line || empty, catalog), [line, catalog]);
+  const targets = useMemo(() => lineSaleTargets(line || empty, catalog), [line, catalog]);
+  const ids = useMemo(() => lineMarketItems(line || empty, catalog, targets), [line, catalog, targets]);
   const market = useMarket(server.id, ids, snapshot);
-  const plan = useMemo(() => lineEstimate(line || empty, catalog, workshop.state, server.id, market.prices), [line, catalog, workshop.state, server.id, market.prices]);
+  const plan = useMemo(() => lineEstimate(line || empty, catalog, workshop.state, server.id, market.prices, targets), [line, catalog, workshop.state, server.id, market.prices, targets]);
   const close = () => setDialog('');
   const activeStep = stepContext?.lineId === line?.id ? line?.steps.find(s => s.id === stepContext?.stepId) : null;
   const currentRecipe = activeStep && catalog.byId[activeStep.recipeId];
@@ -115,7 +117,7 @@ export function Lines({ catalog, workshop, lineId, onSelect, language, locale, s
         <button className="icon-button" title={t('deleteLine')} aria-label={t('deleteLine')} onClick={() => setDialog('delete')}><Trash2 size={16}/></button>
         <button className="button secondary" onClick={() => startName('new')}><Plus size={15}/>{t('newLine')}</button></div>
       <div className="line-layout"><section className="panel stage-panel"><div className="line-heading"><h2><Layers3 size={19}/>{t('stages')} <span className="count-badge">{format(line.steps.length)}</span></h2><button className="text-button" onClick={() => setDialog('pick')}><Plus size={15}/>{t('addRecipe')}</button></div>
-        {plan.stages.length ? <><p className="line-hint">{t('projectionHint')}</p><ol className="stages">{plan.stages.map(({ step, recipe, combos, outputs, carried }, i) => {
+        {plan.stages.length ? <><p className="line-hint">{t('projectionHint')} {t('saleBasis')}</p><ol className="stages">{plan.stages.map(({ step, recipe, combos, outputs, carried, sale }, i) => {
           const item = catalog.items[recipe.itemId];
           const title = itemName(item, language);
           return <li key={step.id}><div className="stage-rail"><i className={'tier-dot grade-' + item.grade}/></div><div className={'stage-card' + (step.done ? ' stage-finished' : '')}>
@@ -125,7 +127,9 @@ export function Lines({ catalog, workshop, lineId, onSelect, language, locale, s
             <details className="stage-more"><summary>{recipe.combo ? t(step.done ? 'actualCombos' : 'plannedCombos') + ' · ' + format(combos) + (step.done ? '' : ' (' + format(recipe.combo.chance) + '%)') : t('outputs')}<ChevronDown size={13}/></summary>
               {recipe.combo && !step.done && <div className="combo-control"><NumberField maximum={step.count} value={combos} label={t('plannedCombos') + ' · ' + title} onChange={value => edit('lineCombos', step, { value })}/><button className="text-button" disabled={step.combos == null} onClick={() => edit('lineCombos', step, { value: null })}>{t('autoCombos')}</button></div>}
               {outputs.map(out => <small key={out.itemId}>{format(out.quantity)} × {itemName(catalog.items[out.itemId], language)}</small>)}
-            </details><div className="stage-footer">{step.done ? <div className="stage-status"><Check size={15}/>{t('stageDone')}{workshop.state.lastCraft?.receipt === step.done.receipt && <button className="text-button" onClick={async () => { if (await workshop.change({ type: 'undo', receipt: step.done.receipt })) notify({ label: 'undone' }); }}>{t('undo')}</button>}</div>
+            </details>
+            <StageSale {...{ sale, catalog, language, format, t }} onPrice={price} loading={market.busy}/>
+            <div className="stage-footer">{step.done ? <div className="stage-status"><Check size={15}/>{t('stageDone')}{workshop.state.lastCraft?.receipt === step.done.receipt && <button className="text-button" onClick={async () => { if (await workshop.change({ type: 'undo', receipt: step.done.receipt })) notify({ label: 'undone' }); }}>{t('undo')}</button>}</div>
               : <button className="button stage-craft" disabled={!step.count} onClick={() => openStep('record', step)} aria-label={t('craft') + ' · ' + title}><Hammer size={15}/>{t('craft')}</button>}
             <div className="stage-tools">{[[ArrowUp, 'moveUp', -1, i === 0], [ArrowDown, 'moveDown', 1, i === line.steps.length - 1]].map(([Icon, key, direction, disabled]) =>
               <button key={key} className="icon-button" title={t(key)} aria-label={t(key) + ' · ' + title} disabled={disabled} onClick={() => edit('lineMove', step, { direction })}><Icon size={14}/></button>)}

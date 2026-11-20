@@ -147,6 +147,38 @@
 .stage-status { flex-wrap: wrap; }.stage-status button { font-size: .75rem; }
 .stage-finished { border-color: #39483f; }
 .stage-count b { color: var(--text); font-size: 1rem; }
+.stage-sale { grid-column: 1/-1; min-width: 0; padding: 10px 12px; border: 1px solid #3f3746; border-radius: 7px; background: #1a181f; }
+.sale-now, .sale-verdict, .sale-cost-total { display: flex; align-items: center; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
+.sale-now > div { flex: 1 1 140px; min-width: 0; }
+.sale-now strong { display: block; color: var(--text); font-size: .83rem; font-weight: 600; }
+.sale-now small, .sale-target, .sale-metrics dt, .sale-verdict small, .sale-lots li, .sale-breakdown p { color: var(--muted); font-size: .75rem; line-height: 1.4; }
+.sale-now small { display: block; margin-top: 2px; overflow-wrap: anywhere; }
+.sale-money, .sale-edit, .sale-verdict b, .sale-target, .sale-breakdown summary { display: inline-flex; align-items: center; gap: 5px; }
+.sale-money { min-width: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.sale-edit { color: var(--gold); font-size: .86rem; font-weight: 600; margin-left: auto; min-height: 32px; text-align: end; }
+.sale-edit svg, .sale-target svg, .sale-verdict svg { flex: none; }
+.sale-target { display: flex; gap: 7px; margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--line); color: #d1c5db; }
+.sale-metrics { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,135px),1fr)); gap: 5px 12px; margin: 8px 0; }
+.sale-metrics dd { margin: 2px 0 0; color: var(--text); font-size: .86rem; font-weight: 550; }
+.sale-verdict { padding: 7px 9px; background: #29252f; border-radius: 5px; color: #dbd4e3; }
+.sale-verdict small, .sale-verdict strong { display: block; }
+.sale-verdict strong { font-size: .81rem; font-weight: 600; }
+.sale-verdict b { font-size: .94rem; margin-left: auto; }
+.sale-verdict.positive { color: #90e3ae; background: #1e3129; }
+.sale-verdict.negative { color: #ffa8a4; background: #392529; }
+.sale-verdict.positive small, .sale-verdict.negative small { color: inherit; }
+.sale-verdict .kinah-coin { display: none; }
+.sale-missing { display: flex; gap: 0 12px; flex-wrap: wrap; margin-top: 4px; }
+.sale-missing button { display: inline-flex; align-items: center; gap: 4px; color: var(--lilac); font-size: .75rem; min-height: 30px; text-align: start; }
+.sale-breakdown summary { cursor: pointer; color: #c8b5d8; font-size: .76rem; min-height: 32px; }
+.sale-breakdown summary::-webkit-details-marker { display: none; }
+.sale-breakdown[open] summary svg { transform: rotate(180deg); }
+.sale-lots { margin: 5px 0 8px; }
+.sale-lots > strong, .sale-cost-total { font-size: .78rem; color: #ded5e3; }
+.sale-lots li { display: flex; align-items: center; justify-content: space-between; gap: 4px 12px; padding: 2px 0; flex-wrap: wrap; }
+.sale-lots li > span { min-width: 0; overflow-wrap: anywhere; }
+.sale-lots .unit-price { min-height: 26px; margin: 0 0 0 auto; }
+.sale-cost-total { border-block: 1px solid var(--line); padding: 6px 0; }
 .carry-stock svg { flex: none; }
 .restart-line { margin: 0 15px 14px; color: var(--muted); min-height: 32px; }
 .confirm-materials .number-field { width: 70px; }

@@ -93,7 +93,69 @@ function addCost(sum, units, price) {
   else { sum.value += BigInt(units) * BigInt(price); sum.quoted++; }
 }
 
-export function lineEstimate(line, catalog, workshop, server, quotes = {}) {
+// Match the first later recipe that takes this exact output. At the end of a
+// known equipment chain, preview the next tier without adding it to the plan.
+export function lineSaleTargets(line, catalog) {
+  const recipes = line.steps.map(step => catalog.byId[step.recipeId]);
+  const included = new Set(recipes.map(r => r.id));
+  const consumers = new Map();
+  const targets = Array(recipes.length).fill(null);
+  for (let i = recipes.length - 1; i >= 0; i--) {
+    const recipe = recipes[i];
+    const saleId = recipe.combo?.itemId ?? recipe.itemId;
+    const index = consumers.get(saleId);
+    if (index != null) {
+      targets[i] = { index, recipe: recipes[index] };
+    } else if (saleId !== recipe.itemId) {
+      const path = goldProgression(recipe, catalog);
+      const next = path && path[path.findIndex(s => s.recipeId === recipe.id) + 1];
+      if (next && !included.has(next.recipeId)) targets[i] = { index: null, recipe: catalog.byId[next.recipeId] };
+    }
+    for (const m of recipe.materials) for (const option of materialOptions(m)) consumers.set(option.itemId, i);
+  }
+  return targets;
+}
+
+function fullValue(lots) {
+  let value = 0n;
+  for (const lot of lots) {
+    if (lot.value == null) return null;
+    value += lot.value;
+  }
+  return value;
+}
+
+function compareSale(stage, target, stages, stock, priceLot) {
+  const saleId = stage.recipe.combo?.itemId ?? stage.recipe.itemId;
+  const quantity = stage.outputs.find(row => row.itemId === saleId)?.quantity ?? 0;
+  const now = priceLot(saleId, quantity);
+  if (!target) return { now, next: null };
+
+  const planned = target.index == null ? null : stages[target.index];
+  const recipe = target.recipe;
+  const count = planned?.step.count ?? attemptsFromBatch(stage.recipe, recipe, stage.outputs);
+  const outputs = planned?.outputs ?? craftOutputs(recipe, count, projectedCombos({ count }, recipe));
+  const needs = planned?.needs ?? (count ? requirements(recipe, count, { ...stock, [saleId]: Math.max(quantity, stock[saleId] ?? 0) }) : []);
+  const required = needs.find(row => row.itemId === saleId)?.required ?? 0;
+  const used = Math.min(quantity, required);
+  const extra = [];
+  for (const row of needs) {
+    const units = row.required - (row.itemId === saleId ? used : 0);
+    if (units > 0) extra.push(priceLot(row.itemId, units));
+  }
+  const products = outputs.map(out => priceLot(out.itemId, out.quantity));
+  const extraCost = fullValue(extra);
+  const revenue = fullValue(products);
+  const forgone = priceLot(saleId, used);
+  // Unused Brilliants can be sold on either path. Only those exchanged for
+  // the next tier are forgone; extra units bought or taken from stock cost Kinah too.
+  const cost = extraCost != null && forgone.value != null ? extraCost + forgone.value : null;
+  const difference = used > 0 && cost != null && revenue != null ? revenue - cost : null;
+  return { now, next: { recipe, index: target.index, recorded: !!planned?.step.done, count, used, forgone,
+    extra, extraCost, cost, products, revenue, difference } };
+}
+
+export function lineEstimate(line, catalog, workshop, server, quotes = {}, targets = lineSaleTargets(line, catalog)) {
   const owned = { ...workshop.stock };
   const made = {};
   const materials = new Map();
@@ -101,7 +163,7 @@ export function lineEstimate(line, catalog, workshop, server, quotes = {}) {
   const stages = line.steps.map(step => {
     const recipe = catalog.byId[step.recipeId];
     const combos = projectedCombos(step, recipe);
-    return { step, recipe, combos, outputs: craftOutputs(recipe, step.count, combos), carried: [] };
+    return { step, recipe, combos, outputs: craftOutputs(recipe, step.count, combos), needs: step.done?.used ?? [], carried: [] };
   });
   function account({ itemId, required }, alreadySpent) {
     const fromLine = Math.min(made[itemId] || 0, required);
@@ -138,7 +200,8 @@ export function lineEstimate(line, catalog, workshop, server, quotes = {}) {
     if (!step.count) continue;
     const available = { ...owned };
     for (const [id, qty] of Object.entries(made)) add(available, id, qty);
-    for (const need of requirements(recipe, step.count, available)) account(need, false);
+    stage.needs = requirements(recipe, step.count, available);
+    for (const need of stage.needs) account(need, false);
     for (const out of outputs) add(made, out.itemId, out.quantity);
   }
   const cash = total(), inputs = total(), market = total();
@@ -155,13 +218,20 @@ export function lineEstimate(line, catalog, workshop, server, quotes = {}) {
   const producedIds = new Set(stages.flatMap(stage => stage.outputs.map(output => output.itemId)));
   const retained = [...producedIds].filter(itemId => made[itemId] > 0).map(itemId =>
     ({ itemId, quantity: made[itemId], ...unitQuote(itemId, workshop, server, quotes) }));
+  function priceLot(itemId, quantity) {
+    const { price } = unitQuote(itemId, workshop, server, quotes);
+    const value = !quantity ? 0n : price == null ? null : BigInt(quantity) * BigInt(price);
+    return { itemId, quantity, price, value };
+  }
+  for (const [i, stage] of stages.entries()) stage.sale = compareSale(stage, targets[i], stages, workshop.stock, priceLot);
   return { stages, rows: [...materials.values()], cash, inputs, market, final, retained };
 }
 
-export function lineMarketItems(line, catalog) {
+export function lineMarketItems(line, catalog, targets = lineSaleTargets(line, catalog)) {
   const ids = new Set();
-  for (const { recipeId } of line.steps) {
-    const recipe = catalog.byId[recipeId];
+  const recipes = new Set(line.steps.map(s => catalog.byId[s.recipeId]));
+  for (const target of targets) if (target) recipes.add(target.recipe);
+  for (const recipe of recipes) {
     for (const m of recipe.materials) {
       ids.add(m.itemId);
       for (const alt of m.alternatives || []) ids.add(alt.itemId);

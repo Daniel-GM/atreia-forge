@@ -178,3 +178,81 @@ test('batch sizing supports ordinary yields, alternate ingredients and repeated 
   assert.equal(attemptsFromBatch(source, target, []), 0);
   assert.equal(attemptsFromBatch(source, { materials: [{ itemId: '4', quantity: 2 }] }, []), null);
 });
+
+const salePrices = {
+  ...Object.fromEntries(lineMarketItems(line, catalog).map(({ itemId }) => [itemId, 10])),
+  [brilliant]: 100, [second.itemId]: 300, [second.combo.itemId]: 500,
+};
+
+test('continuing compares both next-tier outputs with the materials and the forgone Brilliant sale', () => {
+  const stocked = { ...state, stock: Object.fromEntries(second.materials.map(m => [m.itemId, 999])) };
+  const sale = lineEstimate(line, catalog, stocked, '1406', salePrices).stages[0].sale;
+  assert.deepEqual([sale.now.quantity, sale.now.value, sale.next.used], [16, 1600n, 16]);
+  assert.deepEqual(sale.next.products.map(p => [p.quantity, p.value]), [[12, 3600n], [4, 2000n]]);
+  assert.deepEqual([sale.next.extraCost, sale.next.cost, sale.next.revenue, sale.next.difference], [1600n, 3200n, 5600n, 2400n]);
+  for (const [price, difference] of [[250, 0n], [300, -800n]]) {
+    assert.equal(lineEstimate(line, catalog, stocked, '1406', { ...salePrices, [brilliant]: price }).stages[0].sale.next.difference, difference);
+  }
+});
+
+test('surplus Brilliants cancel between options and extra Brilliants are valued even when already owned', () => {
+  const configured = { steps: line.steps.map((s, i) => i === 1 ? { ...s, count: 12 } : s) };
+  const { now, next } = lineEstimate(configured, catalog, state, '1406', salePrices).stages[0].sale;
+  assert.deepEqual([now.quantity - next.used, next.used, next.extraCost, next.revenue], [4, 12, 1200n, 4200n]);
+  assert.equal(next.difference, next.revenue + 400n - next.extraCost - now.value);
+  const short = { steps: line.steps.map((s, i) => i ? s : { ...s, combos: 3 }) };
+  const extra = lineEstimate(short, catalog, { ...state, stock: { [brilliant]: 13 } }, '1406', salePrices).stages[0].sale.next;
+  assert.deepEqual([extra.used, extra.extra.find(r => r.itemId === brilliant).quantity, extra.extraCost, extra.difference], [3, 13, 2900n, 2400n]);
+  const recorded = applyChange(executing(), firstCraft, catalog);
+  const actual = lineEstimate(recorded.lines[line.id], catalog, recorded, '1406', salePrices).stages[0].sale;
+  assert.deepEqual([actual.now.quantity, actual.next.count, actual.next.difference], [13, 13, 1900n]);
+});
+
+test('missing quotes suppress the verdict, while zero prices, zero units and manual prices keep their meanings', () => {
+  for (const id of [brilliant, second.itemId, second.combo.itemId, second.materials[1].itemId]) {
+    const quotes = { ...salePrices };
+    delete quotes[id];
+    const ws = { ...state, prices: { '1406': { [id]: 0 } } };
+    assert.equal(lineEstimate(line, catalog, ws, '1306', quotes).stages[0].sale.next.difference, null);
+    assert.equal(typeof lineEstimate(line, catalog, ws, '1406', quotes).stages[0].sale.next.difference, 'bigint');
+  }
+  const none = { steps: line.steps.map((s, i) => i === 0 ? { ...s, combos: 0 } : s) };
+  const sale = lineEstimate(none, catalog, state, '1406', salePrices).stages[0].sale;
+  assert.equal(sale.now.value, 0n);
+  assert.equal(sale.next.difference, null);
+  const noNextCombos = { steps: line.steps.map((s, i) => i === 1 ? { ...s, combos: 0 } : s) };
+  assert.equal(lineEstimate(noNextCombos, catalog, state, '1406', { ...salePrices, [second.combo.itemId]: null }).stages[0].sale.next.difference, 1600n);
+  const noAttempts = { steps: line.steps.map((s, i) => i === 1 ? { ...s, count: 0 } : s) };
+  assert.equal(lineEstimate(noAttempts, catalog, state, '1406', salePrices).stages[0].sale.next.difference, null);
+});
+
+test('previewing the gold guard tier fetches its prices without adding it to the plan or shopping list', () => {
+  const chain = goldProgression(catalog.byId['111083001'], catalog);
+  const partial = { steps: chain.slice(0, 3) };
+  const result = lineEstimate(partial, catalog, state, '1406');
+  const preview = result.stages[2].sale;
+  assert.equal(result.stages.length, 3);
+  assert.deepEqual([preview.now.quantity, preview.next.index, preview.next.recipe.id, preview.next.count], [1, null, '111083001', 1]);
+  const gold = catalog.byId['111083001'];
+  const ids = lineMarketItems(partial, catalog).map(row => row.itemId);
+  for (const id of [gold.itemId, gold.combo.itemId, ...gold.materials.map(m => m.itemId)]) assert.ok(ids.includes(id));
+  assert.ok(!result.rows.some(r => r.itemId === gold.materials.at(-1).itemId));
+  const full = lineEstimate({ steps: chain }, catalog, state, '1406');
+  assert.equal(full.stages[2].sale.next.index, 3);
+  assert.equal(full.stages[3].sale.next, null);
+  const mixed = { steps: [line.steps[0], { ...line.steps[0], recipeId: mace[0] }, line.steps[1]] };
+  assert.equal(lineEstimate(mixed, catalog, state, '1406').stages[0].sale.next.index, 2);
+});
+
+test('same-item combo yields and actual alternative allocations are priced in the correct units', () => {
+  const a = { id: 'a', itemId: '101', yield: 2, materials: [{ itemId: '301', quantity: 1 }], combo: { itemId: '101', quantity: 3, chance: 25 } };
+  const b = { id: 'b', itemId: '102', yield: 2, materials: [{ itemId: '302', quantity: 1, alternatives: [{ itemId: '101', quantity: 2 }] }, { itemId: '303', quantity: 2 }] };
+  const cat = indexCatalog({ items: {}, recipes: [a, b] });
+  const draft = { steps: [{ recipeId: 'a', count: 4 }, { recipeId: 'b', count: 3 }] };
+  const quotes = { 101: 100, 102: 150, 303: 10 };
+  const sale = lineEstimate(draft, cat, state, '1406', quotes).stages[0].sale;
+  assert.deepEqual([sale.now.quantity, sale.next.used, sale.next.extraCost, sale.next.revenue, sale.next.difference], [9, 6, 60n, 900n, 240n]);
+  const usedPrimary = lineEstimate(draft, cat, { ...state, stock: { 302: 3 } }, '1406', quotes).stages[0].sale;
+  assert.equal(usedPrimary.next.used, 0);
+  assert.equal(usedPrimary.next.difference, null);
+});
