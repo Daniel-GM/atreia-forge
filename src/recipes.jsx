@@ -41,13 +41,28 @@ export function RecipeBrowser({ recipes, categories, category, setCategory, quer
   </section>;
 }
 
+export function RecipeTotal({ plan, loading, t, format, compact = false }) {
+  const hasAmount = !plan.unpriced || plan.rows.some(row => row.missing > 0 && row.subtotal !== null);
+  let label = plan.unpriced ? 'partial' : 'estimated';
+  if (!hasAmount) label = loading ? 'marketLoading' : 'unknown';
+  const hint = t(plan.unpriced ? 'unknownHint' : 'purchaseHint');
+  const amount = hasAmount ? format(plan.total) : '—';
+  if (compact) return <span className="saved-cost" title={hint}>
+    <span className="saved-cost-label">{t(label)}</span>
+    <span className="saved-cost-value">{hasAmount && <Coin/>}<span>{amount}{hasAmount && ' Kinah'}</span></span>
+  </span>;
+  return <div className="investment">
+    <span className="investment-icon"><Coin large/></span>
+    <div className="investment-copy"><strong>{t(label)}</strong><small>{hint}</small></div>
+    <div className="investment-value" aria-live="polite" aria-atomic="true"><span>{amount}</span>{hasAmount && <small>Kinah</small>}</div>
+  </div>;
+}
+
 export function RecipeDetail({ recipe, catalog, language, locale, t, format, count, setCount, plan, market, saved, embedded = false, onSave, onCraft, onLine, onPrice, onStock, onInfo, onAlternatives }) {
   const item = catalog.items[recipe.itemId];
   const Icon = professionIcons[recipe.profession] || Anvil;
   const date = market.asOf && new Date(market.asOf);
   const dateLabel = date && !Number.isNaN(+date) ? new Intl.DateTimeFormat(locale.locale, { dateStyle: 'short', timeStyle: 'short' }).format(date) : null;
-  const hasKnown = plan.rows.some(row => row.missing > 0 && row.subtotal !== null);
-  const totalUnavailable = plan.unpriced > 0 && !hasKnown;
   const status = market.status === 'ok' ? 'live' : market.status === 'stale' ? 'stale' : market.busy ? 'marketLoading' : 'offline';
   return <article className={'detail panel' + (embedded ? ' saved-detail' : '')} aria-label={t('details')}>
     {!embedded && <header className="detail-head">
@@ -85,11 +100,7 @@ export function RecipeDetail({ recipe, catalog, language, locale, t, format, cou
           </div>;
         })}
       </div>
-      <div className="investment">
-        <span className="investment-icon"><Coin large/></span>
-        <div className="investment-copy"><strong>{t(plan.unpriced ? 'partial' : 'estimated')}</strong><small>{t(plan.unpriced ? 'unknownHint' : 'purchaseHint')}</small></div>
-        <div className="investment-value" aria-live="polite" aria-atomic="true">{totalUnavailable ? <span>—</span> : <><span>{format(plan.total)}</span><small>Kinah</small></>}</div>
-      </div>
+      <RecipeTotal {...{ plan, t, format }} loading={market.busy}/>
       <div className="detail-actions">
         {!embedded && <button type="button" className={'button secondary' + (saved ? ' is-saved' : '')} onClick={onSave} aria-pressed={saved} title={saved ? t('removeSaved') : t('bookmark')}>
           {saved ? <Check size={17}/> : <Bookmark size={17}/>}<span>{t(saved ? 'bookmarked' : 'bookmark')}</span>

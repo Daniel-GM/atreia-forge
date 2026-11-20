@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Archive, Bookmark, BookmarkMinus, ChevronDown, PackageOpen } from 'lucide-react';
 import { fold, itemName } from './data.js';
 import { ItemIcon, NumberField, SearchField } from './ui.jsx';
+import { RecipeTotal } from './recipes.jsx';
 
 export function Inventory({ catalog, workshop, language, t, format }) {
   const [query, setQuery] = useState('');
@@ -27,15 +28,17 @@ export function Inventory({ catalog, workshop, language, t, format }) {
   </section>;
 }
 
-export function SavedRecipes({ catalog, workshop, language, t, format, onExpand, expandedId, detail, go }) {
-  const list = Object.entries(workshop.state.saved).map(([id, count]) => ({ recipe: catalog.byId[id], count })).filter(entry => entry.recipe);
+export function SavedRecipes({ savedCrafts, catalog, workshop, language, t, format, loading, onExpand, expandedId, detail, go }) {
   return <section className="panel collection-panel">
-    <div className="collection-head"><h2><Bookmark size={20}/>{t('recipes')} <span className="count-badge">{format(list.length)}</span></h2></div>
-    {list.length ? <div className="saved-list">{list.map(({ recipe, count }) => {
+    <div className="collection-head"><h2><Bookmark size={20}/>{t('recipes')} <span className="count-badge">{format(savedCrafts.length)}</span></h2></div>
+    {savedCrafts.length ? <div className="saved-list">{savedCrafts.map(({ recipe, count, plan }) => {
       const item = catalog.items[recipe.itemId];
       const open = expandedId === recipe.id;
       return <div className={'saved-entry' + (open ? ' expanded' : '')} key={recipe.id}><div className="saved-row">
-        <button className="open-saved" id={'saved-toggle-' + recipe.id} aria-expanded={open} aria-controls={'saved-detail-' + recipe.id} onClick={() => onExpand(recipe.id)}><ItemIcon item={item}/><span><strong>{itemName(item, language)}</strong><small>{t(recipe.profession)} · {t('level')} {format(recipe.level)} · {format(count)}×</small></span><ChevronDown size={17}/></button>
+        <button className="open-saved" id={'saved-toggle-' + recipe.id} aria-expanded={open} aria-controls={'saved-detail-' + recipe.id} onClick={() => onExpand(recipe.id)}>
+          <ItemIcon item={item}/><span className="saved-name"><strong>{itemName(item, language)}</strong><small>{t(recipe.profession)} · {t('level')} {format(recipe.level)} · {format(count)}×</small></span>
+          <RecipeTotal {...{ plan, loading, t, format }} compact/><ChevronDown size={17}/>
+        </button>
         <button className="icon-button" aria-label={t('removeSaved') + ' · ' + itemName(item, language)} onClick={() => workshop.change({ type: 'save', recipeId: recipe.id, count: null })}><BookmarkMinus size={17}/></button>
       </div><div id={'saved-detail-' + recipe.id} role="region" aria-labelledby={'saved-toggle-' + recipe.id} hidden={!open}>{open && detail}</div></div>;
     })}</div> : <div className="empty-state saved-empty"><span className="big-symbol"><Bookmark size={31}/></span><h3>{t('noSaved')}</h3><p>{t('noSavedHint')}</p><button className="button primary" onClick={() => go('calculator')}>{t('openCalculator')}</button></div>}

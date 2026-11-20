@@ -48,8 +48,15 @@ export default function App({ catalog, servers, snapshot }) {
   const [alternatives, setAlternatives] = useState([]);
   const [toast, setToast] = useState(null);
   const [returnToList, setReturnToList] = useState(false);
-  const market = useMarket(server.id, page === 'calculator' || expandedRecipe ? recipe.materials : [], snapshot);
-  const plan = estimate(recipe, count, workshop.state, server.id, market.prices);
+  const savedRecipes = useMemo(() => page === 'saved' ? Object.entries(workshop.state.saved)
+    .map(([id, count]) => ({ recipe: catalog.byId[id], count }))
+    .filter(entry => entry.recipe) : [], [page, catalog, workshop.state.saved]);
+  const materials = page === 'calculator' ? recipe.materials : savedRecipes.flatMap(entry => entry.recipe.materials);
+  const market = useMarket(server.id, materials, snapshot);
+  const savedCrafts = useMemo(() => savedRecipes.map(entry => ({
+    ...entry, plan: estimate(entry.recipe, entry.count, workshop.state, server.id, market.prices),
+  })), [savedRecipes, workshop.state, server.id, market.prices]);
+  const plan = savedCrafts.find(entry => entry.recipe === expandedRecipe)?.plan ?? estimate(recipe, count, workshop.state, server.id, market.prices);
   const t = useMemo(() => tFor(language), [language]);
   const locale = locales.find(l => l.code === language) || locales.find(l => l.code === 'pt');
   const formatter = useMemo(() => new Intl.NumberFormat(locale.locale), [locale]);
@@ -147,7 +154,7 @@ export default function App({ catalog, servers, snapshot }) {
             {detail}
           </div>
         </> : page === 'lines' ? <Lines {...{ catalog, workshop, lineId, language, locale, server, snapshot, t, format, profession }} onSelect={selectLine} notify={setToast}/>
-          : page === 'inventory' ? <Inventory catalog={catalog} workshop={workshop} language={language} t={t} format={format}/> : <SavedRecipes {...{ catalog, workshop, language, t, format, go, expandedId, detail }} onExpand={id => setExpandedId(current => current === id ? null : id)}/>}
+          : page === 'inventory' ? <Inventory catalog={catalog} workshop={workshop} language={language} t={t} format={format}/> : <SavedRecipes {...{ savedCrafts, catalog, workshop, language, t, format, go, expandedId, detail }} loading={market.busy} onExpand={id => setExpandedId(current => current === id ? null : id)}/>}
       </main>
     </div>
     {['server', 'language'].includes(dialog) && <SelectionDialog key={dialog} kind={dialog} onClose={() => setDialog('')} t={t} server={server} servers={servers} language={language} onServer={chooseServer} onLanguage={code => { setLanguage(code); writeSettings({ language: code }); }}/>}
