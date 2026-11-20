@@ -114,7 +114,7 @@ export function PriceDialog({ row, item, server, language, workshop, market, t, 
     if (await workshop.change({ type: 'price', server: server.id, itemId: row.itemId, value })) onClose();
   }
   return <Modal title={itemName(item, language)} onClose={onClose} t={t}>
-    <div className="price-summary"><ItemIcon item={item}/><div><small>{t('market')} · {server.name}</small><strong>{hasQuote ? format(market.prices[row.itemId]) + ' Kinah' : t('unknown')}</strong></div></div>
+    <div className="price-summary"><ItemIcon item={item}/><div><small>{t('market')} · {server.name}</small><strong>{hasQuote ? format(market.prices[row.itemId]) + ' Kinah' : t(market.availability?.[row.itemId] === 'unlisted' ? 'noOffersText' : 'unknown')}</strong></div></div>
     <a className="source-link" href={questUrl} target="_blank" rel="noreferrer">{t('marketLink')}<ExternalLink size={14}/></a>
     <label className="form-label">{t('manual')} <span>· Kinah</span>
       <input className="form-input" type="number" inputMode="numeric" min="0" max={MAX_PRICE} step="1" value={draft} placeholder="0"

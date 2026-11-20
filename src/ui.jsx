@@ -85,28 +85,28 @@ function Brand() {
 }
 
 export function Navigation({ page, go, t, numSaved, onDevice, questUrl }) {
-  const links = Object.entries(pages).map(([key, Icon]) =>
-    <button key={key} className={'nav-link' + (page === key ? ' active' : '')} aria-current={page === key ? 'page' : undefined} onClick={() => go(key)}>
-      <Icon size={20} strokeWidth={1.65}/>{key === 'lines' ? <><span className="nav-wide">{t(key)}</span><span className="nav-short">{t('linesShort')}</span></> : <span>{t(key)}</span>}
+  const links = compact => Object.entries(pages).map(([key, Icon]) =>
+    <button key={key} className={'nav-link' + (page === key ? ' active' : '')} aria-label={t(key)} title={t(key)} aria-current={page === key ? 'page' : undefined} onClick={() => go(key)}>
+      <Icon size={20} strokeWidth={1.65}/><span>{t(key === 'lines' && compact ? 'linesShort' : key)}</span>
       {key === 'saved' && numSaved > 0 && <span className="nav-count">{numSaved}</span>}
     </button>);
   return <>
     <aside className="sidebar">
       <button className="brand-link" aria-label="Atreia Forge" onClick={() => go('calculator')}><Brand/></button>
-      <div className="side-group"><div className="section-label">{t('workshop')}</div><nav aria-label={t('navigation')}>{links}</nav></div>
+      <div className="side-group"><div className="section-label">{t('workshop')}</div><nav aria-label={t('navigation')}>{links(false)}</nav></div>
       <div className="side-bottom">
         <div className="resources">
           <div className="section-label">{t('market')}</div>
           <a href={questUrl} target="_blank" rel="noreferrer"><BookMarked size={16}/> Questlog <ExternalLink size={13}/></a>
           <a href="https://aion2.exchange/" target="_blank" rel="noreferrer"><Globe2 size={16}/> Aion2 Exchange <ExternalLink size={13}/></a>
         </div>
-        <button className="profile-link" onClick={onDevice}><span className="avatar"><HardDrive size={21}/></span>
-          <span><strong>{t('deviceData')}</strong><small>{t('exportData')} / {t('importData')}</small></span>
+        <button className="profile-link" onClick={onDevice} aria-label={t('deviceData')} title={t('deviceData')}><span className="avatar"><HardDrive size={21}/></span>
+          <span><strong>{t('deviceData')}</strong></span>
           <ChevronRight size={15} className="profile-chevron"/>
         </button>
       </div>
     </aside>
-    <nav className="mobile-nav" aria-label={t('navigation')}>{links}</nav>
+    <nav className="mobile-nav" aria-label={t('navigation')}>{links(true)}</nav>
   </>;
 }
 

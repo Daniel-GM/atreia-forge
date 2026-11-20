@@ -1,4 +1,4 @@
-.sidebar .nav-short, .mobile-nav .nav-wide { display: none; }
+.sidebar .profile-link strong { white-space: normal; }
 .device-lead { display: flex; align-items: center; gap: 15px; color: var(--muted); font-size: .92rem; line-height: 1.55; }
 .device-lead svg { flex: none; color: var(--lilac); }
 .form-error { color: #ffbab3; }
