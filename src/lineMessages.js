@@ -1,5 +1,6 @@
 export const lineMessages = {
   de: {
+    pasteBackup: 'Sicherung als Text einfügen',
     lines: 'Herstellungsketten',
     linesShort: 'Ketten',
     linesDesc: 'Plane die Herstellung Schritt für Schritt und vergleiche die Kosten mit dem Preis des fertigen Gegenstands.',
@@ -65,6 +66,7 @@ export const lineMessages = {
     noOffersText: 'Keine Angebote auf diesem Server.',
   },
   es: {
+    pasteBackup: 'Pegar una copia como texto',
     lines: 'Cadenas de fabricación',
     linesShort: 'Cadenas',
     linesDesc: 'Planifica las etapas de fabricación y compara el coste con el precio del objeto terminado.',
@@ -130,6 +132,7 @@ export const lineMessages = {
     noOffersText: 'Sin ofertas en este servidor.',
   },
   fr: {
+    pasteBackup: 'Coller une sauvegarde sous forme de texte',
     lines: 'Chaînes de fabrication',
     linesShort: 'Chaînes',
     linesDesc: 'Planifie les étapes de fabrication et compare leur coût au prix de l’objet fini.',
@@ -195,6 +198,7 @@ export const lineMessages = {
     noOffersText: 'Aucune offre sur ce serveur.',
   },
   ru: {
+    pasteBackup: 'Вставить резервную копию как текст',
     lines: 'Цепочки крафта',
     linesShort: 'Цепочки',
     linesDesc: 'Спланируйте этапы крафта и сравните затраты с ценой готового предмета.',
@@ -260,6 +264,7 @@ export const lineMessages = {
     noOffersText: 'На этом сервере нет предложений.',
   },
   ja: {
+    pasteBackup: 'バックアップをテキストで貼り付ける',
     lines: '製作ルート',
     linesShort: 'ルート',
     linesDesc: '製作の手順を組み立て、必要な費用と完成品の相場を比べられます。',
@@ -325,6 +330,7 @@ export const lineMessages = {
     noOffersText: 'このサーバーには出品がありません。',
   },
   ko: {
+    pasteBackup: '백업을 텍스트로 붙여넣기',
     lines: '제작 경로',
     linesShort: '경로',
     linesDesc: '제작 단계를 계획하고 드는 비용을 완성품의 시세와 비교하세요.',
@@ -390,6 +396,7 @@ export const lineMessages = {
     noOffersText: '이 서버에는 매물이 없습니다.',
   },
   zh: {
+    pasteBackup: '以文字貼上備份',
     lines: '製作路線',
     linesShort: '路線',
     linesDesc: '規劃每個製作步驟，並將製作成本與成品市價相比。',
@@ -455,6 +462,7 @@ export const lineMessages = {
     noOffersText: '此伺服器目前無上架商品。',
   },
   pt: {
+    pasteBackup: 'Colar uma cópia em texto',
     lines: 'Linhas de craft',
     linesShort: 'Linhas',
     linesDesc: 'Planeje as etapas de criação e compare o investimento com o preço do item pronto.',
@@ -520,6 +528,7 @@ export const lineMessages = {
     noOffersText: 'Sem oferta neste servidor.',
   },
   en: {
+    pasteBackup: 'Paste a backup as text',
     lines: 'Crafting chains',
     linesShort: 'Chains',
     linesDesc: 'Plan each crafting stage and compare the cost with the price of the finished item.',
