@@ -4,11 +4,12 @@ Calculadora de craft de AION 2 em React e Tailwind CSS. O catálogo inclui os ma
 
 ## Usar a oficina
 
-- Escolha o servidor, a profissão e o tipo de item. Informe o estoque para calcular o custo dos materiais que faltam.
-- Em **Linhas de craft**, carregue o exemplo do Colar de Rubi ou monte sua própria sequência. Você também pode adicionar uma receita à linha direto pela calculadora.
+- Busque o servidor pelo nome ou pela região, escolha a profissão e o tipo de item. Informe o estoque para calcular o custo dos materiais que faltam.
+- Em **Linhas de craft**, escolha uma receita por profissão e categoria. A oficina sugere as etapas anteriores e seguintes. Você também pode carregar o exemplo do Colar de Rubi ou adicionar uma receita pela calculadora.
 - A sequência 64 → 16 → 4 → 1 usa as chances de combo do jogo. É possível editar as tentativas e os combos de cada etapa. Os resultados de uma etapa abastecem a próxima, e o custo consolidado considera cada unidade do inventário uma única vez.
 - A comparação mostra o desembolso necessário, o valor de todos os insumos externos e a cotação do lote da última etapa. As sobras das etapas anteriores aparecem separadamente. Preços expressos em Kinah, antes de taxas de venda.
-- Ao registrar um craft, informe quantos combos obteve e escolha se deseja adicionar os resultados ao inventário. A baixa dos ingredientes e a entrada dos produtos são gravadas juntas.
+- Use **Registrar craft** na própria etapa para informar quantos combos obteve. Ao adicionar os resultados ao inventário, a próxima etapa que usa esses itens recebe a quantidade de tentativas correspondente. A baixa dos ingredientes e a entrada dos produtos são gravadas juntas.
+- Em **Crafts salvos**, toque na receita para abrir seus materiais e ajustar as quantidades na própria lista.
 - O estoque, as linhas e as receitas salvas ficam no navegador. Para transferi-los de dispositivo, use **Dados neste dispositivo → Exportar cópia / Importar cópia**.
 
 ## Executar

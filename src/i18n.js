@@ -1189,6 +1189,22 @@ function baseLanguage(code) {
   return String(code || 'pt').toLowerCase().split(/[-_]/)[0]
 }
 
+const regions = {
+  pt: { LA: 'América Latina', AS: 'Ásia', EU: 'Europa', NAE: 'América do Norte (Leste)', NAW: 'América do Norte (Oeste)' },
+  en: { LA: 'Latin America', AS: 'Asia', EU: 'Europe', NAE: 'North America East', NAW: 'North America West' },
+  de: { LA: 'Lateinamerika', AS: 'Asien', EU: 'Europa', NAE: 'Nordamerika (Ost)', NAW: 'Nordamerika (West)' },
+  es: { LA: 'América Latina', AS: 'Asia', EU: 'Europa', NAE: 'Norteamérica (Este)', NAW: 'Norteamérica (Oeste)' },
+  fr: { LA: 'Amérique latine', AS: 'Asie', EU: 'Europe', NAE: 'Amérique du Nord (Est)', NAW: 'Amérique du Nord (Ouest)' },
+  ru: { LA: 'Латинская Америка', AS: 'Азия', EU: 'Европа', NAE: 'Северная Америка (восток)', NAW: 'Северная Америка (запад)' },
+  ja: { LA: '中南米', AS: 'アジア', EU: 'ヨーロッパ', NAE: '北米東部', NAW: '北米西部' },
+  ko: { LA: '라틴 아메리카', AS: '아시아', EU: '유럽', NAE: '북아메리카 동부', NAW: '북아메리카 서부' },
+  zh: { LA: '拉丁美洲', AS: '亞洲', EU: '歐洲', NAE: '北美洲東部', NAW: '北美洲西部' },
+}
+
+export function regionName(region, language) {
+  return (regions[baseLanguage(language)] || regions.pt)[region] || region
+}
+
 const recipeTerms = {
   pt: { alternatives: 'Materiais alternativos', combo: 'Combo', succession: 'Sucessão' },
   en: { alternatives: 'Alternative materials', combo: 'Combo', succession: 'Succession' },

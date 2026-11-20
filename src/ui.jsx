@@ -2,7 +2,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { Archive, BookMarked, Bookmark, Calculator, Check, ChevronDown, ChevronRight, CookingPot, ExternalLink, FlaskConical, Gem, Globe2, Hammer, HardDrive, Home, ListTree, Minus, Plus, Search, Shield, Swords, X } from 'lucide-react';
 import { integer, MAX_CRAFTS, MAX_STOCK } from '../shared/planner.js';
 import { fold } from './data.js';
-import { locales } from './i18n.js';
+import { locales, regionName } from './i18n.js';
 
 export const professions = ['blacksmithing', 'armorsmithing', 'handicrafting', 'alchemy', 'cooking'];
 export const professionIcons = { blacksmithing: Swords, armorsmithing: Shield, handicrafting: Gem, alchemy: FlaskConical, cooking: CookingPot };
@@ -111,11 +111,12 @@ export function Navigation({ page, go, t, numSaved, onDevice, questUrl }) {
 }
 
 export function Topbar({ page, t, server, locale, onServer, onLanguage, onDevice, onHome }) {
+  const region = regionName(server.region, locale.code);
   return <header className="topbar">
     <div className="crumb"><Home size={16}/><ChevronRight size={13}/><span>{t('workshop')}</span><ChevronRight size={13}/><b>{t(page)}</b></div>
-    <button className="mobile-brand" onClick={onHome}><Brand/></button>
+    <button className="mobile-brand" aria-label="Atreia Forge" onClick={onHome}><Brand/></button>
     <div className="top-actions">
-      <button className="top-pill" onClick={onServer} aria-label={t('server') + ' · ' + server.name}><span className="server-glyph"><Globe2 size={15}/></span><span>{server.name}</span><span className="server-region">{server.region}</span><ChevronDown size={14}/></button>
+      <button className="top-pill" onClick={onServer} aria-label={[t('server'), server.name, region].join(' · ')}><span className="server-glyph"><Globe2 size={15}/></span><span className="server-location"><span>{server.name}</span><span className="server-region">{region}</span></span><ChevronDown size={14}/></button>
       <button className="language-button" onClick={onLanguage} aria-label={t('language') + ' · ' + locale.label}><Globe2 size={16}/><span>{locale.short}</span><ChevronDown size={14}/></button>
       <button onClick={onDevice} className="mobile-account icon-button" aria-label={t('deviceData')}><HardDrive size={20}/></button>
     </div>
@@ -133,9 +134,10 @@ export function Hero({ page, t }) {
 }
 
 export function Professions({ selected, counts, onSelect, t, format }) {
-  return <section className="professions" aria-labelledby="professions-heading">
-    <h2 className="small-heading" id="professions-heading">{t('professions')}</h2>
-    <div className="profession-strip" role="group" aria-labelledby="professions-heading">
+  const heading = useId();
+  return <section className="professions" aria-labelledby={heading}>
+    <h2 className="small-heading" id={heading}>{t('professions')}</h2>
+    <div className="profession-strip" role="group" aria-labelledby={heading}>
       {professions.map(key => {
         const Icon = professionIcons[key] || Hammer;
         return <button className={'profession ' + key + (selected === key ? ' chosen' : '')} aria-pressed={selected === key} key={key} onClick={() => onSelect(key)}>
@@ -147,11 +149,22 @@ export function Professions({ selected, counts, onSelect, t, format }) {
   </section>;
 }
 
+export function FactionSelect({ server, value, onChange, t }) {
+  return <label className="form-label">{t('faction')}<span className="form-select"><select value={value} onChange={e => onChange(e.target.value)}>
+    <option value="server">{server.name} · {t(server.faction.toLowerCase())}</option><option value="all">{t('bothFactions')}</option><option value="elyos">{t('elyos')}</option><option value="asmodian">{t('asmodian')}</option>
+  </select><ChevronDown size={15}/></span></label>;
+}
+
 export function SelectionDialog({ kind, onClose, t, server, servers, language, onServer, onLanguage }) {
   const [query, setQuery] = useState('');
   const isServer = kind === 'server';
   const title = t(isServer ? 'selectServer' : 'language');
-  const choices = isServer ? servers.filter(s => fold(s.name + ' ' + s.id + ' ' + s.region + ' ' + s.faction).includes(fold(query))) : locales;
+  const words = fold(query).split(/\s+/);
+  const regionCodes = new Set(servers.map(s => s.region.toLowerCase()));
+  const choices = isServer ? servers.filter(s => {
+    const searchable = fold([s.name, '#' + s.id, regionName(s.region, language), s.region, t(s.faction.toLowerCase()), s.faction].join(' '));
+    return words.every(word => regionCodes.has(word) ? s.region.toLowerCase() === word : searchable.includes(word));
+  }) : locales;
   return <Modal title={title} onClose={onClose} t={t}>
       {isServer && <SearchField value={query} setValue={setQuery} label={t('searchServer')} t={t}/>}
       <div className="choice-list">{choices.map(choice => {
@@ -159,7 +172,7 @@ export function SelectionDialog({ kind, onClose, t, server, servers, language, o
         const selected = id === (isServer ? server.id : language);
         return <button className={'choice-row' + (selected ? ' chosen' : '')} key={id} aria-pressed={selected}
           onClick={() => { if (isServer) onServer(id); else onLanguage(id); onClose(); }}>
-          <span>{isServer ? choice.name : choice.label}{isServer && <small>{choice.region} · {t(choice.faction.toLowerCase())} · #{choice.id}</small>}</span>
+          <span>{isServer ? choice.name : choice.label}{isServer && <small>{regionName(choice.region, language)} · {t(choice.faction.toLowerCase())} · #{choice.id}</small>}</span>
           {selected && <Check size={17}/>}
         </button>;
       })}{!choices.length && <p className="empty-text">{t('noResults')}</p>}</div>

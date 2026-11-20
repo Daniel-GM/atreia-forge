@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { applyChange, emptyWorkshop, estimate, indexCatalog, MAX_STOCK } from '../shared/planner.js';
-import { locales } from '../src/i18n.js';
+import { locales, regionName } from '../src/i18n.js';
 
 const data = indexCatalog(JSON.parse(readFileSync(new URL('../public/data/catalog.json', import.meta.url))));
 const mace = data.byId[data.defaultRecipeId];
@@ -11,6 +11,18 @@ const prices = { [ingot]: 6899, [stone]: 1259, [od]: 6318 };
 const stock = { [ingot]: 7, [stone]: 10, [od]: 4 };
 const workspace = () => ({ ...emptyWorkshop(), stock: { ...stock } });
 const craft = { type: 'craft', recipeId: mace.id, id: 'receipt', count: 2 };
+
+test('server regions have a full localized name for every language and market', () => {
+  const markets = JSON.parse(readFileSync(new URL('../public/data/markets.json', import.meta.url)));
+  const codes = [...new Set(markets.servers.map(s => s.region))].sort();
+  assert.deepEqual(codes.map(code => regionName(code, 'pt')), ['Ásia', 'Europa', 'América Latina', 'América do Norte (Leste)', 'América do Norte (Oeste)']);
+  for (const { code: language } of locales) {
+    const names = codes.map(code => regionName(code, language));
+    assert.equal(new Set(names).size, codes.length);
+    assert.ok(names.every(name => name && !codes.includes(name)));
+  }
+  assert.equal(regionName('NAW', 'en-nc'), 'North America West');
+});
 
 test('cost uses the missing quantity and never credits excess stock', () => {
   assert.equal(estimate(mace, 1, emptyWorkshop(), '1406', prices).total, 39628n);
