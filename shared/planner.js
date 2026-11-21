@@ -12,11 +12,13 @@ export function indexCatalog(catalog) {
   return { ...catalog, byId: Object.fromEntries(catalog.recipes.map(recipe => [recipe.id, recipe])) };
 }
 
-export function unitQuote(itemId, workshop, server, prices) {
-  const quote = prices[itemId];
+export function resolveQuote(quote, manual) {
   if (Number.isSafeInteger(quote) && quote >= 0) return { price: quote, manual: false };
-  const manual = workshop.prices[server]?.[itemId];
   return { price: manual ?? null, manual: manual != null };
+}
+
+export function unitQuote(itemId, workshop, server, prices) {
+  return resolveQuote(prices[itemId], workshop.prices[server]?.[itemId]);
 }
 
 export function estimate(recipe, crafts, workshop, server, prices = {}) {

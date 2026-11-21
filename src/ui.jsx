@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { Archive, BookMarked, Bookmark, Calculator, Check, ChevronDown, ChevronRight, CircleUserRound, CookingPot, ExternalLink, FlaskConical, Gem, Globe2, Hammer, Home, ListTree, Minus, Plus, Search, Shield, Swords, TrendingUp, X } from 'lucide-react';
+import { Archive, BookMarked, Bookmark, Calculator, Check, ChevronDown, ChevronRight, CircleUserRound, CookingPot, ExternalLink, FlaskConical, Gem, Globe2, Hammer, Home, LayoutGrid, ListTree, Minus, Plus, Search, Shield, Swords, TrendingUp, X } from 'lucide-react';
 import { integer, MAX_CRAFTS, MAX_STOCK } from '../shared/planner.js';
 import { fold } from './data.js';
 import { locales, regionName } from './i18n.js';
@@ -133,16 +133,17 @@ export function Hero({ page, t }) {
   </section>;
 }
 
-export function Professions({ selected, counts, onSelect, t, format }) {
+export function Professions({ selected, counts, onSelect, t, format, allCount }) {
   const heading = useId();
+  const options = allCount == null ? professions : ['all', ...professions];
   return <section className="professions" aria-labelledby={heading}>
     <h2 className="small-heading" id={heading}>{t('professions')}</h2>
     <div className="profession-strip" role="group" aria-labelledby={heading}>
-      {professions.map(key => {
-        const Icon = professionIcons[key] || Hammer;
+      {options.map(key => {
+        const Icon = key === 'all' ? LayoutGrid : professionIcons[key] || Hammer;
         return <button className={'profession ' + key + (selected === key ? ' chosen' : '')} aria-pressed={selected === key} key={key} onClick={() => onSelect(key)}>
           <span className="profession-icon"><Icon size={23} strokeWidth={1.65}/></span>
-          <span><strong>{t(key)}</strong><small>{format(counts[key] || 0)} {t('recipes').toLocaleLowerCase()}</small></span>
+          <span><strong>{t(key)}</strong><small>{format(key === 'all' ? allCount : counts[key] || 0)} {t('recipes').toLocaleLowerCase()}</small></span>
         </button>;
       })}
     </div>

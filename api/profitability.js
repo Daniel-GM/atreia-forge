@@ -29,7 +29,9 @@ export default async function profitability(req, res) {
   if (!server || !validMarketFeeBps(body.feeBps) || typeof manual !== 'object' || Array.isArray(manual) ||
     Object.entries(manual).some(([id, value]) => !Object.hasOwn(catalog.items, id) ||
       !Number.isSafeInteger(value) || value < 0 || value > MAX_PRICE)) return reply(400, { error: 'invalid_request' });
-  const recipes = saleRecipes(catalog, server.faction.toLowerCase());
+  const faction = body.faction ?? server.faction.toLowerCase();
+  if (!['all', 'elyos', 'asmodian'].includes(faction)) return reply(400, { error: 'invalid_faction' });
+  const recipes = saleRecipes(catalog, faction);
   const ids = marketItemIds(recipes);
   const requests = [];
   for (let i = 0; i < ids.length; i += 100) {

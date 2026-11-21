@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Anvil, Bookmark, BookOpen, Check, ChevronDown, ChevronRight, CircleAlert, Clock3, ExternalLink, Hammer, Info, Layers3, ListFilter, ListPlus, PackageCheck, Pencil, RefreshCw, SearchX, SlidersHorizontal } from 'lucide-react';
+import { Anvil, Bookmark, BookOpen, Check, ChevronRight, CircleAlert, Clock3, ExternalLink, Hammer, Info, Layers3, ListPlus, PackageCheck, Pencil, RefreshCw, SearchX } from 'lucide-react';
 import { craftOutputs, MAX_PRICE } from '../shared/planner.js';
 import { attemptsFromBatch } from '../shared/crafting.js';
 import { itemName } from './data.js';
 import { categoryName, gradeName } from './i18n.js';
-import { Coin, ItemIcon, Modal, NumberField, professionIcons, SearchField, Stepper } from './ui.jsx';
+import { Coin, ItemIcon, Modal, NumberField, professionIcons, Stepper } from './ui.jsx';
+import { RecipeFilterFields } from './recipe-filters.jsx';
 
 export function RecipeBrowser({ recipes, categories, category, setCategory, query, setQuery, selected, profession, select, onFilters, filteredFaction, catalog, language, t, format, inModal = false, clearFilters }) {
   const [limit, setLimit] = useState(60);
@@ -19,13 +20,7 @@ export function RecipeBrowser({ recipes, categories, category, setCategory, quer
   return <section className={'recipe-browser panel' + (inModal ? ' in-dialog' : '')} aria-label={t('recipes')}>
     <div className="browser-controls">
       {!inModal && <div className="panel-head"><h2><BookOpen size={18}/>{t('recipes')}</h2><span className="count-badge">{format(recipes.length)}</span></div>}
-      <div className="search-row"><SearchField value={query} setValue={setQuery} label={t('searchRecipe')} t={t}/>
-        <button className={'filter-button' + (filteredFaction ? ' applied' : '')} onClick={onFilters} aria-label={t('filter') + ' · ' + t('faction')}><SlidersHorizontal size={17}/></button>
-      </div>
-      <label className="category-select"><ListFilter size={15}/><select aria-label={t('category')} value={category} onChange={e => setCategory(e.target.value)}>
-        <option value="all">{t('allCategories')}</option>
-        {categories.map(key => <option value={key} key={key}>{categoryName(key, language)}</option>)}
-      </select><ChevronDown size={14}/></label>
+      <RecipeFilterFields {...{ categories, category, setCategory, query, setQuery, onFilters, filteredFaction, language, t }}/>
     </div>
     <div className="recipe-scroll" ref={list}>
       {recipes.slice(0, limit).map(recipe => {

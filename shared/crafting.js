@@ -32,13 +32,17 @@ export function requirements(recipe, crafts, stock = {}) {
   return [...amounts.values()];
 }
 
-export function craftOutputs(recipe, count, combos = 0) {
+export function craftOutcomes(recipe, count, combos = 0) {
   if (!Number.isInteger(combos) || combos < 0 || combos > count || (combos && !recipe.combo)) throw new Error('actualCombos');
+  const outcomes = [{ kind: 'normal', itemId: recipe.itemId, quantity: recipe.yield, occurrences: count - combos }];
+  if (recipe.combo) outcomes.push({ kind: 'combo', itemId: recipe.combo.itemId, quantity: recipe.combo.quantity, occurrences: combos });
+  return outcomes;
+}
+
+export function craftOutputs(recipe, count, combos = 0) {
   const outputs = new Map();
-  if (count > combos) outputs.set(recipe.itemId, (count - combos) * recipe.yield);
-  if (combos) {
-    const { itemId, quantity } = recipe.combo;
-    outputs.set(itemId, (outputs.get(itemId) || 0) + combos * quantity);
+  for (const { itemId, quantity, occurrences } of craftOutcomes(recipe, count, combos)) {
+    if (occurrences) outputs.set(itemId, (outputs.get(itemId) || 0) + occurrences * quantity);
   }
   return [...outputs].map(([itemId, quantity]) => ({ itemId, quantity }));
 }

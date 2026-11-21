@@ -14,7 +14,8 @@ Calculadora de craft de AION 2 em React e Tailwind CSS. O catálogo inclui os ma
 - Use **Registrar craft** na própria etapa para informar quantos combos obteve. Ao adicionar os resultados ao inventário, a próxima etapa que usa esses itens recebe a quantidade de tentativas correspondente. A baixa dos ingredientes e a entrada dos produtos são gravadas juntas.
 - Em **Crafts salvos**, toque na receita para abrir seus materiais e ajustar as quantidades na própria lista.
 - Visitantes usam a oficina local. Em **Minha conta**, contas Google convidadas podem acessar sua oficina sincronizada e o menu **Rentabilidade**. Para trazer o estoque antigo, entre com Google, abra **Minha conta → Copiar dados deste dispositivo para a conta**, confira a prévia e confirme. A cópia original continua no navegador.
-- Em **Rentabilidade**, escolha a profissão ou busque a receita e ordene por lucro em Kinah ou margem. O cálculo usa o servidor e a taxa selecionados, inclusive preços manuais quando faltar uma cotação. A margem percentual usa a venda líquida como denominador. Abra **Faltam cotações** para preencher os preços que impedem a comparação.
+- Em **Rentabilidade**, filtre por profissão, categoria, nome e facção como na calculadora. As cotações e a taxa acompanham o servidor selecionado. Ordene por lucro ou margem e toque em uma receita para abrir os materiais e as vendas dentro do ranking.
+- O detalhe mostra a quantidade, o preço unitário e o subtotal de cada material. Para cada resultado, a venda média por tentativa é a chance de sair × quantidade produzida × preço unitário. A soma das vendas médias, descontada a taxa e o custo dos materiais, dá o lucro por tentativa. A margem é o lucro dividido pela venda líquida. Receitas com preços ausentes aparecem em **Faltam cotações**, onde também é possível abrir o detalhe e informar os valores.
 
 ## Executar
 

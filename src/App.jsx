@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Check, ChevronDown, ChevronRight, CircleAlert, ExternalLink, Search, X } from 'lucide-react';
+import { BookOpen, Check, ChevronRight, CircleAlert, ExternalLink, Search, X } from 'lucide-react';
 import { estimate, integer, MAX_CRAFTS } from '../shared/planner.js';
 import { itemName, readSettings, useMarket, writeSettings } from './data.js';
-import { categoryName, locales, tFor } from './i18n.js';
+import { locales, tFor } from './i18n.js';
 import { useWorkshop } from './useWorkshop.js';
-import { FactionSelect, Hero, ItemIcon, Modal, Navigation, NumberField, Professions, SelectionDialog, Topbar } from './ui.jsx';
+import { Hero, ItemIcon, Modal, Navigation, NumberField, Professions, SelectionDialog, Topbar } from './ui.jsx';
+import { RecipeFilterDialog } from './recipe-filters.jsx';
 import { gameOrder, matchesFaction, useRecipeList } from './recipe-filter.js';
 import { CraftDialog, PriceDialog, RecipeBrowser, RecipeDetail } from './recipes.jsx';
 import { Inventory, SavedRecipes } from './collections.jsx';
@@ -164,11 +165,7 @@ export default function App({ catalog, servers, snapshot, account }) {
     {dialog === 'device' && <DeviceDialog {...{ catalog, workshop, account, t, format }} onClose={() => setDialog('')} onImport={() => { setDialog(''); setToast({ label: 'imported' }); }}/>}
     {dialog === 'addToLine' && showingDetail && <AddToLineDialog {...{ recipe, count, catalog, workshop, t, language, format }} selectedId={lineId} onSelect={id => { selectLine(id); go('lines'); setToast({ label: 'lineAdded' }); }} onClose={() => setDialog('')}/>}
     {dialog === 'recipes' && <Modal className="library-dialog" title={t('recipes') + ' · ' + t(profession)} t={t} onClose={() => setDialog('')}><RecipeBrowser {...libraryProps} inModal/></Modal>}
-    {dialog === 'filters' && <Modal title={t('filter')} onClose={() => setDialog(returnToList ? 'recipes' : '')} t={t}>
-      <FactionSelect server={server} value={factionMode} onChange={setFactionMode} t={t}/>
-      <label className="form-label">{t('category')}<span className="form-select"><select value={category} onChange={e => setCategory(e.target.value)}><option value="all">{t('allCategories')}</option>{categories.map(key => <option key={key} value={key}>{categoryName(key, language)}</option>)}</select><ChevronDown size={15}/></span></label>
-      <div className="modal-actions"><button className="text-button" onClick={clearFilters}>{t('clearFilters')}</button><button className="button primary" onClick={() => setDialog(returnToList ? 'recipes' : '')}>{t('confirm')}</button></div>
-    </Modal>}
+    {dialog === 'filters' && <RecipeFilterDialog {...{ server, factionMode, setFactionMode, categories, category, setCategory, language, t, clearFilters }} onClose={() => setDialog(returnToList ? 'recipes' : '')}/>}
     {dialog === 'price' && showingDetail && activeRow && <PriceDialog row={activeRow} item={catalog.items[activeRow.itemId]} server={server} language={language} workshop={workshop} market={market} t={t} format={format} onClose={() => setDialog('')}/>}
     {dialog === 'craft' && showingDetail && <CraftDialog key={recipe.id} recipe={recipe} catalog={catalog} plan={plan} count={count} t={t} language={language} format={format} problem={workshop.problem} onConfirm={register} onClose={() => setDialog('')}/>}
     {dialog === 'info' && showingDetail && <Modal title={t('details')} onClose={() => setDialog('')} t={t}>
