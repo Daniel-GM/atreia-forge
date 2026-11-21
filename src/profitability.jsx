@@ -40,6 +40,7 @@ export function Profitability({ catalog, workshop, account, server, language, lo
   const [sort, setSort] = useState('profit');
   const [limit, setLimit] = useState(20);
   const [priceId, setPriceId] = useState(null);
+  const [showMissing, setShowMissing] = useState(false);
   const money = useMemo(() => new Intl.NumberFormat(locale.locale, { maximumFractionDigits: 2 }), [locale]);
   const percentage = useMemo(() => new Intl.NumberFormat(locale.locale, { style: 'percent', maximumFractionDigits: 2 }), [locale]);
   const name = itemId => itemName(catalog.items[itemId], language);
@@ -61,7 +62,8 @@ export function Profitability({ catalog, workshop, account, server, language, lo
       <div className="mode-options" role="group" aria-label={t('sortRank')}>{['profit', 'margin'].map(key => <button key={key} aria-pressed={key === sort} onClick={() => { setSort(key); setLimit(20); }}>{t(key)}</button>)}</div>
     </div>
     <div className="profit-heading"><TrendingUp size={19}/><h2>Kinah · {t('perAttempt')}</h2>{data && <span className="count-badge">{format(rows.length)}</span>}</div>
-    <p className="profit-method">{t('profitFormula')}</p>
+    <div className="quote-foot rank-source"><span className={'quote-status ' + status}><Clock3 size={14}/>{t(status)}{stamp && ' · ' + stamp}</span><a href="https://aion2.exchange/api/docs" target="_blank" rel="noreferrer">Aion2 Exchange</a><button className="refresh-button" aria-label={t('refresh')} disabled={busy} onClick={refresh}><RefreshCw size={15}/></button></div>
+    <details className="profit-method"><summary>{t('saleBreakdown')}</summary><p>{t('profitFormula')}</p></details>
     {rows.length > 0 && <div className="profit-list">
       <div className="profit-columns" aria-hidden="true">{['product', 'craftCost', 'grossSale', 'netSale', 'profit', 'margin'].map(k => <span key={k}>{t(k)}</span>)}</div>
       {rows.slice(0, limit).map(row => {
@@ -77,10 +79,9 @@ export function Profitability({ catalog, workshop, account, server, language, lo
       {rows.length > limit && <button className="text-button" onClick={() => setLimit(n => n + 20)}>{t('showMore')}</button>}
     </div>}
     {!rows.length && <p className="empty-text" role="status">{t(busy ? 'marketLoading' : error || (incomplete.length ? 'missingPrices' : 'noResults'))}</p>}
-    {incomplete.length > 0 && <details className="incomplete-rank"><summary>{t('missingPrices')} <span className="count-badge">{format(incomplete.length)}</span></summary>
-      <div>{incomplete.map(row => <section key={row.recipeId}><strong>{name(catalog.byId[row.recipeId].itemId)}</strong><div>{row.missing.map(id => <button className="text-button" key={id} onClick={() => setPriceId(id)}>{name(id)}<Pencil size={11}/></button>)}</div></section>)}</div>
+    {incomplete.length > 0 && <details className="incomplete-rank" open={showMissing} onToggle={e => setShowMissing(e.currentTarget.open)}><summary>{t('missingPrices')} <span className="count-badge">{format(incomplete.length)}</span></summary>
+      {showMissing && <div>{incomplete.map(row => <section key={row.recipeId}><strong>{name(catalog.byId[row.recipeId].itemId)}</strong><div>{row.missing.map(id => <button className="text-button" key={id} onClick={() => setPriceId(id)}>{name(id)}<Pencil size={11}/></button>)}</div></section>)}</div>}
     </details>}
-    <footer className="quote-foot"><span className={'quote-status ' + status}><Clock3 size={14}/>{t(status)}{stamp && ' · ' + stamp}</span><a href="https://aion2.exchange/api/docs" target="_blank" rel="noreferrer">Aion2 Exchange</a><button className="refresh-button" aria-label={t('refresh')} disabled={busy} onClick={refresh}><RefreshCw size={15}/></button></footer>
     {priceId && <PriceDialog key={priceId} row={{ itemId: priceId }} item={catalog.items[priceId]} {...{ server, language, workshop, t, format }} market={{ prices: {} }} onClose={() => setPriceId(null)}/>}
   </section>;
 }

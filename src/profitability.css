@@ -6,6 +6,7 @@
 .signed-account > div { flex: 1; overflow-wrap: anywhere; }
 .signed-account > svg { color: #95d9b5; }
 .copy-device { margin-top: .9rem; }
+.access-panel, .profit-panel { margin-top: 1rem; }
 .access-panel { padding: 1rem; }
 .access-panel .google-access { border: 0; padding: 0; }
 .profit-panel { padding: clamp(.8rem, 2vw, 1.4rem); }
@@ -17,6 +18,8 @@
 .profit-heading { gap: .6rem; color: var(--lilac); }
 .profit-heading h2 { color: var(--text); font-weight: 650; }
 .profit-method { margin: .45rem 0 1rem; font-size: .82rem; color: var(--muted); }
+.profit-method summary { cursor: pointer; color: var(--lilac); }
+.profit-method p { margin: .35rem 0; }
 .profit-columns { display: none; }
 .profit-row { border-top: 1px solid var(--line); padding: .9rem 0; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .7rem; align-items: center; }
 .profit-item { grid-column: 1/-1; gap: .6rem; text-align: left; min-width: 0; }
@@ -32,7 +35,7 @@
 .incomplete-rank > div { max-height: 22rem; overflow: auto; }
 .incomplete-rank section { padding: .65rem 0; border-bottom: 1px solid var(--line); font-size: .825rem; }
 .incomplete-rank section div { display: flex; flex-wrap: wrap; gap: .25rem .85rem; }
-.profit-panel .quote-foot { margin-top: .65rem; }
+.profit-panel .rank-source { margin: .45rem 0; padding: .4rem 0; border: 0; flex-wrap: wrap; }
 @media (min-width: 1050px) {
   .profit-columns, .profit-row { display: grid; grid-template-columns: minmax(12rem,2.4fr) repeat(4,minmax(5rem,1fr)) minmax(4rem,.7fr); gap: .6rem; }
   .profit-columns { color: var(--muted); font-size: .76rem; padding: .45rem 0; }

@@ -5,15 +5,19 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email_verified == true
         && request.auth.token.firebase.sign_in_provider == 'google.com';
     }
-    function member() {
-      return googleUser() && get(/databases/$(database)/documents/members/$(request.auth.token.email.lower())).data.enabled == true;
+    function memberPath() {
+      return /databases/$(database)/documents/members/$(request.auth.token.email.lower());
+    }
+    function ownsWorkshop(uid) {
+      return googleUser() && request.auth.uid == uid && exists(memberPath())
+        && get(memberPath()).data.get('enabled', false) == true;
     }
     match /members/{email} {
       allow get: if googleUser() && request.auth.token.email.lower() == email;
     }
     match /workshops/{uid} {
-      allow get: if member() && request.auth.uid == uid;
-      allow create, update: if member() && request.auth.uid == uid
+      allow get: if ownsWorkshop(uid);
+      allow create, update: if ownsWorkshop(uid)
         && request.resource.data.keys().hasOnly(['payload'])
         && request.resource.data.payload is string && request.resource.data.payload.size() <= 950000;
     }
