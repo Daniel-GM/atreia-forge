@@ -146,6 +146,12 @@
   .rarity.grade-epic { color: #a6c6ef; }
   .rarity.grade-heroic, .rarity.grade-mythic { color: #d8aeeb; }
   .rarity.grade-unique { color: #dfc693; }
+  .item-name.grade-common { color: #eeeef2; }
+  .item-name.grade-rare { color: #38e86b; }
+  .item-name.grade-epic { color: #48a9ff; }
+  .item-name.grade-unique { color: #ffd338; }
+  .item-name.grade-heroic { color: #ffa04b; }
+  .item-name.grade-mythic { color: #db97ff; }
   .saved-indicator { margin-left: auto; color: var(--lilac); align-self: flex-start; fill: #8d64ac33; }
   .recipe-info { align-self: flex-start; margin-left: auto; width: 24px; height: 26px; }
   .alternative-link { display: block; color: var(--lilac); font-size: .75rem; text-decoration: underline dotted; text-underline-offset: 3px; }

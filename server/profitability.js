@@ -2,6 +2,8 @@ import { craftOutcomes, materialOptions } from '../shared/crafting.js';
 import { resolveQuote } from '../shared/planner.js';
 import { netSaleValue } from '../shared/quantities.js';
 import { isBound } from '../shared/recipe-filter.js';
+import { previousCraftTier } from '../shared/lines.js';
+import { tierProfit } from './tier-profit.js';
 export { saleRecipes } from '../shared/recipe-filter.js';
 
 // A batch of 100 represents each whole-percent combo chance in the catalogue exactly.
@@ -70,6 +72,7 @@ function priceOutcomes(recipe, items, quote, feeBps, missing) {
 
 export function rankCrafts(recipes, items, quotes, manual, feeBps) {
   const rows = [], incomplete = [];
+  const details = new Map();
   const quote = id => resolveQuote(quotes[id], manual[id]);
   for (const recipe of recipes) {
     const missing = new Set();
@@ -79,8 +82,14 @@ export function rankCrafts(recipes, items, quotes, manual, feeBps) {
     const row = { recipeId: recipe.id, materials, outcomes, cost: cost == null ? null : Number(cost),
       gross: mean(gross), net: mean(net), fee: net == null ? null : mean(gross - net), profit: mean(profit),
       margin: profit == null || net === 0n ? null : Number(profit) / Number(net) * 100 };
-    if (missing.size) incomplete.push({ ...row, missing: [...missing] });
+    if (missing.size) { row.missing = [...missing]; incomplete.push(row); }
     else rows.push(row);
+    details.set(recipe.id, row);
+  }
+  const parents = new Map(recipes.map(recipe => [recipe.id, previousCraftTier(recipe, recipes, items)]));
+  for (const recipe of recipes) {
+    const chain = tierProfit(recipe, parents, details, feeBps);
+    if (chain) details.get(recipe.id).chain = chain;
   }
   rows.sort((a, b) => b.profit - a.profit || a.recipeId.localeCompare(b.recipeId));
   return { rows, incomplete };

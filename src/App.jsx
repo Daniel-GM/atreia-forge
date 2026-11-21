@@ -4,7 +4,7 @@ import { estimate, integer, MAX_CRAFTS } from '../shared/planner.js';
 import { itemName, readSettings, useMarket, writeSettings } from './data.js';
 import { locales, tFor } from './i18n.js';
 import { useWorkshop } from './useWorkshop.js';
-import { Hero, ItemIcon, Modal, Navigation, NumberField, Professions, SelectionDialog, Topbar } from './ui.jsx';
+import { Hero, ItemIcon, ItemName, Modal, Navigation, NumberField, Professions, SelectionDialog, Topbar } from './ui.jsx';
 import { RecipeFilterDialog } from './recipe-filters.jsx';
 import { gameOrder, matchesFaction, useRecipeList } from './recipe-filter.js';
 import { CraftDialog, PriceDialog, RecipeBrowser, RecipeDetail } from './recipes.jsx';
@@ -169,18 +169,18 @@ export default function App({ catalog, servers, snapshot, account }) {
     {dialog === 'price' && showingDetail && activeRow && <PriceDialog row={activeRow} item={catalog.items[activeRow.itemId]} server={server} language={language} workshop={workshop} market={market} t={t} format={format} onClose={() => setDialog('')}/>}
     {dialog === 'craft' && showingDetail && <CraftDialog key={recipe.id} recipe={recipe} catalog={catalog} plan={plan} count={count} t={t} language={language} format={format} problem={workshop.problem} onConfirm={register} onClose={() => setDialog('')}/>}
     {dialog === 'info' && showingDetail && <Modal title={t('details')} onClose={() => setDialog('')} t={t}>
-      <div className="craft-summary"><ItemIcon item={catalog.items[recipe.itemId]}/><strong>{itemName(catalog.items[recipe.itemId], language)}</strong></div>
+      <div className="craft-summary"><ItemIcon item={catalog.items[recipe.itemId]}/><strong><ItemName item={catalog.items[recipe.itemId]} language={language}/></strong></div>
       <dl className="recipe-facts">
         <div><dt>{t('faction')}</dt><dd>{t(recipe.faction || 'bothFactions')}</dd></div>
         <div><dt>{t('profLevel')}</dt><dd>{recipe.mechanism === 'succession' ? t('succession') : t(recipe.profession) + ' · ' + format(recipe.level)}</dd></div>
         <div><dt>{t('product')}</dt><dd>×{format(recipe.yield)}</dd></div>
-        {recipe.combo && <div><dt>{t('combo')} · {format(recipe.combo.chance)}%</dt><dd>{itemName(catalog.items[recipe.combo.itemId], language)} ×{format(recipe.combo.quantity)}</dd></div>}
+        {recipe.combo && <div><dt>{t('combo')} · {format(recipe.combo.chance)}%</dt><dd><ItemName item={catalog.items[recipe.combo.itemId]} language={language}/> ×{format(recipe.combo.quantity)}</dd></div>}
       </dl>
       <a className="source-link" target="_blank" rel="noreferrer" href={catalog.sources[0].url}>{t('sourceData')} <ExternalLink size={14}/></a>
     </Modal>}
     {dialog === 'alternatives' && showingDetail && <Modal title={t('alternatives')} onClose={() => setDialog('')} t={t}>
       <div className="inventory-labels"><span>{t('material')}</span><span>{t('owned')}</span></div>
-      {alternatives.map(({ itemId, quantity }) => <div className="inventory-row" key={itemId}><ItemIcon item={catalog.items[itemId]}/><strong>{itemName(catalog.items[itemId], language)} ×{format(quantity)}</strong><NumberField value={workshop.state.stock[itemId] || 0} label={t('owned') + ' · ' + itemName(catalog.items[itemId], language)} onChange={value => workshop.change({ type: 'stock', itemId, value })}/></div>)}
+      {alternatives.map(({ itemId, quantity }) => <div className="inventory-row" key={itemId}><ItemIcon item={catalog.items[itemId]}/><strong><ItemName item={catalog.items[itemId]} language={language}/> ×{format(quantity)}</strong><NumberField value={workshop.state.stock[itemId] || 0} label={t('owned') + ' · ' + itemName(catalog.items[itemId], language)} onChange={value => workshop.change({ type: 'stock', itemId, value })}/></div>)}
     </Modal>}
     {(toast || workshop.problem) && <div className={'toast' + (workshop.problem ? ' error' : '')} role="status">{workshop.problem ? <CircleAlert size={17}/> : <Check size={17}/>}<span>{t(workshop.problem || toast?.label)}</span>
       {!workshop.problem && toast?.undo && toast.undo === workshop.state.lastCraft?.receipt && <button className="text-button" onClick={async () => { if (await workshop.change({ type: 'undo', receipt: toast.undo })) setToast({ label: 'undone' }); }}>{t('undo')}</button>}

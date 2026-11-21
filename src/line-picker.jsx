@@ -1,11 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ListPlus } from 'lucide-react';
 import { recipeSuggestions } from '../shared/lines.js';
-import { itemName } from './data.js';
 import { gradeName } from './i18n.js';
 import { useRecipeList } from './recipe-filter.js';
 import { RecipeBrowser } from './recipes.jsx';
-import { FactionSelect, ItemIcon, Modal, Professions } from './ui.jsx';
+import { FactionSelect, ItemIcon, ItemName, Modal, Professions } from './ui.jsx';
 
 export const withIds = steps => steps.map(step => ({ ...step, id: crypto.randomUUID() }));
 
@@ -17,7 +16,7 @@ function RelatedGroup({ title, steps, existing, chosen, toggle, catalog, languag
       const r = catalog.byId[draft.recipeId], item = catalog.items[r.itemId], found = existing.get(r.id);
       return <label className={'related-row' + (found ? ' in-line' : '')} key={r.id}>
         <input type="checkbox" checked={!!found || chosen.has(r.id)} disabled={!!found} onChange={() => toggle(r.id)}/>
-        <ItemIcon item={item}/><span><strong>{itemName(item, language)}</strong><small>{found ? t('inLine') : gradeName(item.grade, language) + ' · ' + t('level') + ' ' + format(r.level)}</small></span>
+        <ItemIcon item={item}/><span><strong><ItemName item={item} language={language}/></strong><small>{found ? t('inLine') : gradeName(item.grade, language) + ' · ' + t('level') + ' ' + format(r.level)}</small></span>
         <b>×{format(found?.count ?? draft.count)}</b>
       </label>;
     })}
@@ -50,7 +49,7 @@ function RelatedOptions({ recipe, related, line, anchor, onBack, onClose, worksh
   const groupProps = { catalog, language, t, format, existing, chosen, toggle };
   return <Modal title={t('relatedSteps')} onClose={onClose} className="related-dialog" t={t}>
     {onBack && <button className="text-button picker-back" onClick={onBack}><ArrowLeft size={15}/>{t('chooseRecipe')}</button>}
-    <div className="related-selected"><ItemIcon item={item} large/><div><small>{t(recipe.profession)} · {t('level')} {format(recipe.level)}</small><strong>{itemName(item, language)}</strong></div>
+    <div className="related-selected"><ItemIcon item={item} large/><div><small>{t(recipe.profession)} · {t('level')} {format(recipe.level)}</small><strong><ItemName item={item} language={language}/></strong></div>
       <b>×{format(anchor?.count ?? (chosen.size ? related.selected.count : 1))}</b></div>
     <div className="related-scroll"><RelatedGroup {...groupProps} title="previousSteps" steps={related.before}/>
       <RelatedGroup {...groupProps} title="followingSteps" steps={related.after}/>

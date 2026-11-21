@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Archive, Bookmark, BookmarkMinus, ChevronDown, PackageOpen } from 'lucide-react';
 import { fold, itemName } from './data.js';
-import { ItemIcon, NumberField, SearchField } from './ui.jsx';
+import { ItemIcon, ItemName, NumberField, SearchField } from './ui.jsx';
 import { RecipeTotal } from './recipes.jsx';
 
 export function Inventory({ catalog, workshop, language, t, format }) {
@@ -20,7 +20,7 @@ export function Inventory({ catalog, workshop, language, t, format }) {
     <div className="inventory-labels"><span>{t('inventoryItems')}</span><span>{t('owned')}</span></div>
     <div className="inventory-list">
       {filtered.slice(0, limit).map(id => { const item = catalog.items[id]; const name = itemName(item, language);
-        return <div className="inventory-row" key={id}><ItemIcon item={item}/><strong>{name}</strong><NumberField label={t('owned') + ' · ' + name} value={workshop.state.stock[id] || 0} onChange={value => workshop.change({ type: 'stock', itemId: id, value })}/></div>;
+        return <div className="inventory-row" key={id}><ItemIcon item={item}/><strong><ItemName item={item} language={language}/></strong><NumberField label={t('owned') + ' · ' + name} value={workshop.state.stock[id] || 0} onChange={value => workshop.change({ type: 'stock', itemId: id, value })}/></div>;
       })}
     </div>
     {filtered.length > limit && <button className="more-button" onClick={() => setLimit(n => n + 40)}>{t('loadMore')}</button>}
@@ -36,7 +36,7 @@ export function SavedRecipes({ savedCrafts, catalog, workshop, language, t, form
       const open = expandedId === recipe.id;
       return <div className={'saved-entry' + (open ? ' expanded' : '')} key={recipe.id}><div className="saved-row">
         <button className="open-saved" id={'saved-toggle-' + recipe.id} aria-expanded={open} aria-controls={'saved-detail-' + recipe.id} onClick={() => onExpand(recipe.id)}>
-          <ItemIcon item={item}/><span className="saved-name"><strong>{itemName(item, language)}</strong><small>{t(recipe.profession)} · {t('level')} {format(recipe.level)} · {format(count)}×</small></span>
+          <ItemIcon item={item}/><span className="saved-name"><strong><ItemName item={item} language={language}/></strong><small>{t(recipe.profession)} · {t('level')} {format(recipe.level)} · {format(count)}×</small></span>
           <RecipeTotal {...{ plan, loading, t, format }} compact/><ChevronDown size={17}/>
         </button>
         <button className="icon-button" aria-label={t('removeSaved') + ' · ' + itemName(item, language)} onClick={() => workshop.change({ type: 'save', recipeId: recipe.id, count: null })}><BookmarkMinus size={17}/></button>

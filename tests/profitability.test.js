@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { profitScenario } from '../shared/profit-scenario.js';
+import { matchesRecipeName } from '../src/recipe-filter.js';
 import { checkAccess } from '../server/access.js';
+import { handleMarket } from '../server/market.js';
 import { marketItemIds, rankCrafts, saleRecipes } from '../server/profitability.js';
 import { projectId } from '../shared/firebase-project.js';
 
@@ -10,6 +14,87 @@ const recipe = { id: 'r', mechanism: 'craft', faction: 'elyos', itemId: 'normal'
   combo: { itemId: 'bright', chance: 25, quantity: 1 },
   materials: [{ itemId: 'ore', quantity: 3, alternatives: [{ itemId: 'ingot', quantity: 2 }] }] };
 const quotes = { normal: 100, bright: 200, ore: 30, ingot: 25 };
+
+const game = JSON.parse(readFileSync(new URL('../public/data/catalog.json', import.meta.url)));
+const maces = game.recipes.filter(r => r.category === 'mace' && r.faction === 'elyos' && r.mechanism === 'craft');
+const target = maces.find(r => r.id === '111064001');
+const maceQuotes = Object.fromEntries(marketItemIds(maces).map(id => [id, 1]));
+Object.assign(maceQuotes, { '110740013': 11111060, '110730013': 19800000, '110740012': 3499000,
+  '610530008': 315000, '610620015': 80000, '610610015': 79000, '110760023': 10, '110750015': 100 });
+
+test('market keeps the server, lowest listed unit price and capture together, with no historical sale fallback', async t => {
+  const captured = new Date().toISOString();
+  t.mock.method(globalThis, 'fetch', async url => {
+    assert.equal(new URL(url).searchParams.get('server'), '11406');
+    return Response.json({ total: 2, items: [
+      { item_key: 110730013, listed: true, listings: 5, price: 19800000, captured_at: captured, sold_avg_price: 123 },
+      { item_key: 110740013, listed: false, listings: 0, price: null, last_price: 11111060 },
+    ] });
+  });
+  const result = await (await handleMarket(new Request('http://localhost/api/market?server=1406&items=110730013,110740013,110740012'))).json();
+  assert.deepEqual(result.prices, { '110730013': 19800000, '110740013': null, '110740012': null });
+  assert.deepEqual(result.listings, { '110730013': 5, '110740013': 0, '110740012': null });
+  assert.deepEqual(result.availability, { '110730013': 'listed', '110740013': 'unlisted', '110740012': 'unknown' });
+  assert.equal(result.captures['110730013'], captured);
+});
+
+test('Ariel mace screenshot: each sale at full price and the probability-weighted average are different scenarios', () => {
+  const row = rankCrafts(maces, game.items, maceQuotes, {}, 1000).rows.find(r => r.recipeId === target.id);
+  for (const [kind, gross, net, profit] of [
+    ['normal', 11111060, 9999954, 3969954], ['combo', 19800000, 17820000, 11790000],
+    ['average', 13283295, 11954965.5, 5924965.5],
+  ]) {
+    const v = profitScenario(row, target, kind, 'buy', 1000);
+    assert.equal(v.cost, 6030000);
+    assert.deepEqual([v.gross, v.net, v.profit, v.missing], [gross, net, profit, []]);
+  }
+  const chain = profitScenario(row, target, 'average', 'chain', 1000);
+  assert.deepEqual(row.chain.steps.map(s => s.attempts), [16, 4, 1]);
+  assert.equal(chain.cost, 16 * 10 + 4 * 14 + 2531000);
+  assert.deepEqual(row.chain.steps.map(s => s.externalCost), [160, 56, 2531000]);
+  assert.equal(chain.net, row.net);
+  assert.equal(chain.profit, chain.net - chain.cost);
+  const extras = profitScenario(row, target, 'average', 'chain', 1000, true);
+  assert.deepEqual(row.chain.byproducts.map(s => s.quantity), [12, 3]);
+  assert.equal(extras.profit - chain.profit, 378);
+  assert.ok(matchesRecipeName(target, game.items, 'pt', 'brilhante do perito', 'both'));
+  assert.ok(matchesRecipeName(target, game.items, 'pt', 'maca de orichalcum do perito', 'combo'));
+  assert.ok(!matchesRecipeName(target, game.items, 'pt', 'brilhante', 'normal'));
+});
+
+test('a missing intermediate blocks buying it only, and unquoted leftovers are optional', () => {
+  const prices = { ...maceQuotes };
+  delete prices['110740012']; delete prices['110750015']; delete prices[target.itemId];
+  const all = rankCrafts(maces, game.items, prices, {}, 1000);
+  const row = all.incomplete.find(r => r.recipeId === target.id);
+  assert.deepEqual(profitScenario(row, target, 'combo', 'buy', 1000).missing, ['110740012']);
+  const linked = profitScenario(row, target, 'combo', 'chain', 1000);
+  assert.deepEqual(linked.missing, []);
+  assert.equal(linked.profit, 17820000 - linked.cost);
+  assert.deepEqual(profitScenario(row, target, 'average', 'chain', 1000).missing, [target.itemId]);
+  const withSales = profitScenario(row, target, 'combo', 'chain', 1000, true);
+  assert.deepEqual(withSales.missing, ['110750015']);
+  assert.equal(withSales.profit, null);
+  const gold = all.incomplete.concat(all.rows).find(r => r.recipeId === '111063001');
+  assert.deepEqual(gold.chain.steps.map(s => s.attempts), [64, 16, 4, 1]);
+  assert.deepEqual(gold.chain.byproducts.map(s => s.quantity), [48, 12, 3]);
+  assert.ok(!all.rows.concat(all.incomplete).find(r => r.recipeId === '111066001').chain);
+});
+
+test('multi-unit and fractional expected production uses whole batches and follows same-faction item IDs', () => {
+  const base = { ...recipe, id: 'base', itemId: 'baseItem', profession: 'p', category: 'equipment', yield: 1,
+    combo: { itemId: 'ingredient', quantity: 2, chance: 30 }, materials: [{ itemId: 'ore', quantity: 1 }] };
+  const top = { ...base, id: 'top', itemId: 'topItem', yield: 2, combo: null, materials: [{ itemId: 'ingredient', quantity: 1 }] };
+  const other = { ...base, id: 'other', faction: 'asmodian' };
+  const itemMap = { baseItem: { grade: 'common' }, ingredient: { grade: 'rare' }, topItem: { grade: 'rare' }, ore: {} };
+  const all = rankCrafts([other, base, top], itemMap, { topItem: 20, ore: 3, baseItem: 10 }, {}, 1000);
+  const row = all.incomplete.find(r => r.recipeId === 'top');
+  assert.deepEqual(row.chain.steps, [{ recipeId: 'base', attempts: 5/3, externalCost: 5 }, { recipeId: 'top', attempts: 1, externalCost: 0 }]);
+  assert.equal(row.chain.cost, 5);
+  assert.equal(row.chain.byproductNet, 10.5);
+  assert.equal(profitScenario(row, top, 'normal', 'chain', 1000).profit, 31);
+  assert.equal(profitScenario(row, top, 'combo', 'chain', 1000), null);
+});
 
 test('profitability values regular and brilliant outputs, the cheapest equivalent input and both sale fees', () => {
   const result = rankCrafts([recipe], items, quotes, { normal: 10000 }, 1000);

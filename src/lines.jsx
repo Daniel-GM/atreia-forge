@@ -7,7 +7,7 @@ import { parseMarketFee } from '../shared/quantities.js';
 import { itemName, useMarket } from './data.js';
 import { gradeName } from './i18n.js';
 import { CraftDialog, PriceDialog } from './recipes.jsx';
-import { Coin, ItemIcon, Modal, NumberField } from './ui.jsx';
+import { Coin, ItemIcon, ItemName, Modal, NumberField } from './ui.jsx';
 import { LineRecipePicker, withIds } from './line-picker.jsx';
 import { StageSale } from './stage-sale.jsx';
 
@@ -52,7 +52,7 @@ function Amount({ sum, format, t }) {
 function ResultList({ entries, catalog, language, t, format, onPrice }) {
   return <ul className="line-products">{entries.map(row => {
     const item = catalog.items[row.itemId];
-    return <li key={row.itemId}><ItemIcon item={item}/><div><strong>{itemName(item, language)}</strong><small>{gradeName(item.grade, language)} · ×{format(row.quantity)}</small></div>
+    return <li key={row.itemId}><ItemIcon item={item}/><div><strong><ItemName item={item} language={language}/></strong><small>{gradeName(item.grade, language)} · ×{format(row.quantity)}</small></div>
       <button className="quote-edit" title={t('referencePrice')} onClick={() => onPrice(row.itemId)}>{row.price == null ? t('unpriced') : <><Coin/>{format(row.price)}</>}<Pencil size={11}/></button></li>;
   })}</ul>;
 }
@@ -145,12 +145,12 @@ export function Lines({ catalog, workshop, lineId, onSelect, language, locale, s
           const item = catalog.items[recipe.itemId];
           const title = itemName(item, language);
           return <li key={step.id}><div className="stage-rail"><i className={'tier-dot grade-' + item.grade}/></div><div className={'stage-card' + (step.done ? ' stage-finished' : '')}>
-            <button className="stage-item" onClick={() => openStep('related', step)} aria-label={t('relatedSteps') + ' · ' + title}><ItemIcon item={item}/><span><small>{t('step')} {format(i + 1)} · {gradeName(item.grade, language)}</small><strong>{title}</strong></span><ChevronRight size={13}/></button>
+            <button className="stage-item" onClick={() => openStep('related', step)} aria-label={t('relatedSteps') + ' · ' + title}><ItemIcon item={item}/><span><small>{t('step')} {format(i + 1)} · {gradeName(item.grade, language)}</small><strong><ItemName item={item} language={language}/></strong></span><ChevronRight size={13}/></button>
             <label className="stage-count">{t('attempts')}{step.done ? <b>{format(step.count)}</b> : <NumberField minimum={0} maximum={MAX_CRAFTS} value={step.count} label={t('attempts') + ' · ' + title} onChange={value => edit('lineCount', step, { value })}/>}</label>
-            {carried.length > 0 && <div className="carry-stock"><PackageCheck size={15}/><span>{t('owned')} · {carried.map(id => format(workshop.state.stock[id] || 0) + ' × ' + itemName(catalog.items[id], language)).join(', ')}</span></div>}
+            {carried.length > 0 && <div className="carry-stock"><PackageCheck size={15}/><span>{t('owned')} · {carried.map((id, index) => <React.Fragment key={id}>{index > 0 && ', '}{format(workshop.state.stock[id] || 0)} × <ItemName item={catalog.items[id]} language={language}/></React.Fragment>)}</span></div>}
             <details className="stage-more"><summary>{recipe.combo ? t(step.done ? 'actualCombos' : 'plannedCombos') + ' · ' + format(combos) + (step.done ? '' : ' (' + format(recipe.combo.chance) + '%)') : t('outputs')}<ChevronDown size={13}/></summary>
               {recipe.combo && !step.done && <div className="combo-control"><NumberField maximum={step.count} value={combos} label={t('plannedCombos') + ' · ' + title} onChange={value => edit('lineCombos', step, { value })}/><button className="text-button" disabled={step.combos == null} onClick={() => edit('lineCombos', step, { value: null })}>{t('autoCombos')}</button></div>}
-              {outputs.map(out => <small key={out.itemId}>{format(out.quantity)} × {itemName(catalog.items[out.itemId], language)}</small>)}
+              {outputs.map(out => <small key={out.itemId}>{format(out.quantity)} × <ItemName item={catalog.items[out.itemId]} language={language}/></small>)}
             </details>
             <StageSale {...{ sale, catalog, language, format, t, feeLabel }} onPrice={price} loading={market.busy}/>
             <div className="stage-footer">{step.done ? <div className="stage-status"><Check size={15}/>{t('stageDone')}{workshop.state.lastCraft?.receipt === step.done.receipt && <button className="text-button" onClick={async () => { if (await workshop.change({ type: 'undo', receipt: step.done.receipt })) notify({ label: 'undone' }); }}>{t('undo')}</button>}</div>
@@ -171,7 +171,7 @@ export function Lines({ catalog, workshop, lineId, onSelect, language, locale, s
         <div className="shopping-labels"><span>{t('material')}</span>{['fromLine','owned','toBuy','subtotal'].map(k => <span key={k}>{t(k)}</span>)}</div>
         {plan.rows.map(row => {
           const item = catalog.items[row.itemId];
-          return <div className="shopping-row" key={row.itemId}><div className="shopping-name"><ItemIcon item={item}/><span><strong>{itemName(item, language)}</strong><button className="unit-price" onClick={() => price(row.itemId)}>{row.price == null ? t('unpriced') : <><Coin/>{format(row.price)} {t('unit')}</>} <Pencil size={11}/></button></span></div>
+          return <div className="shopping-row" key={row.itemId}><div className="shopping-name"><ItemIcon item={item}/><span><strong><ItemName item={item} language={language}/></strong><button className="unit-price" onClick={() => price(row.itemId)}>{row.price == null ? t('unpriced') : <><Coin/>{format(row.price)} {t('unit')}</>} <Pencil size={11}/></button></span></div>
             {[[row.fromLine,'fromLine'],[row.fromStock,'owned'],[row.missing,'toBuy']].map(([qty,key]) => <div key={key} className={'shopping-qty ' + key}><small>{t(key)}</small>{format(qty)}</div>)}
             <div className="shopping-qty cost"><small>{t('subtotal')}</small>{!row.missing ? '0' : row.price == null ? '—' : format(BigInt(row.price) * BigInt(row.missing))}</div></div>;
         })}</section>}

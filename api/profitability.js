@@ -39,9 +39,10 @@ export default async function profitability(req, res) {
     requests.push(handleMarket(new Request('http://localhost/api/market?' + params)).then(r => r.json()));
   }
   const batches = await Promise.all(requests);
-  const quotes = Object.assign({}, ...batches.map(batch => batch.prices));
-  const result = rankCrafts(recipes, catalog.items, quotes, manual, body.feeBps);
-  return reply(200, { ...result, server: server.id, feeBps: body.feeBps,
+  const merge = field => Object.assign({}, ...batches.map(batch => batch[field]));
+  const market = { prices: merge('prices'), captures: merge('captures'), availability: merge('availability'), listings: merge('listings') };
+  const result = rankCrafts(recipes, catalog.items, market.prices, manual, body.feeBps);
+  return reply(200, { ...result, market, server: server.id, feeBps: body.feeBps,
     status: batches.every(b => b.status === 'ok') ? 'ok' : batches.every(b => b.status === 'unavailable') ? 'unavailable' : 'stale',
     asOf: batches.map(b => b.asOf).filter(Boolean).sort()[0] ?? null });
 }

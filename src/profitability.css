@@ -80,6 +80,41 @@
 .rank-missing-prices { padding-top: .5rem; }
 .rank-missing-prices > div { display: flex; flex-wrap: wrap; gap: .25rem .85rem; }
 .profit-panel .rank-source { margin: .45rem 0; padding: .4rem 0; border: 0; flex-wrap: wrap; }
+.rank-controls { display: flex; flex-wrap: wrap; gap: .55rem 1rem; margin-top: .85rem; }
+.rank-controls label { display: flex; flex: 1 1 13rem; max-width: 24rem; flex-direction: column; gap: .25rem; font-size: .76rem; color: var(--muted); }
+.rank-controls select { min-height: 40px; padding: .35rem .6rem; border-radius: .4rem; border: 1px solid var(--line); background: #201e27; color: var(--text); font: inherit; font-size: .84rem; }
+.profit-item.rank-results { display: grid; gap: .4rem; }
+.rank-results > small { margin: 0; }
+.rank-result-line { display: flex; align-items: center; gap: .55rem; }
+.rank-result-line > span:last-child { min-width: 0; }
+.rank-result-line .item-icon { width: 32px; height: 32px; }
+.rank-result-line strong svg { display: inline; vertical-align: -1px; margin-inline-end: .25rem; color: var(--muted); }
+.rank-result-line small { font-variant-numeric: tabular-nums; }
+.rank-quote a, .rank-quote button { color: var(--lilac); text-decoration: underline; text-underline-offset: .12em; }
+.rank-quote a svg { display: inline; }
+.rank-actual { display: grid; gap: .15rem; margin-top: .45rem; }
+.rank-actual > span { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .2rem .5rem; font-size: .8rem; }
+.rank-actual b { font-weight: 600; }
+.rank-breakdown .positive { color: #94dfb0; }
+.rank-breakdown .negative { color: #f4a4aa; }
+.rank-weight { border-top: 1px solid var(--line); padding-top: .4rem; }
+.tier-compare { margin-bottom: 1.15rem; padding-bottom: 1rem; border-bottom: 1px solid #41394b; }
+.tier-compare h3 { display: flex; align-items: center; gap: .5rem; font-weight: 650; }
+.tier-compare h3 svg { color: var(--lilac); }
+.tier-compare p { margin: .3rem 0 .55rem; color: var(--muted); font-size: .78rem; }
+.tier-compare table { width: 100%; table-layout: fixed; font-variant-numeric: tabular-nums; }
+.tier-compare th, .tier-compare td { text-align: end; padding: .28rem .35rem; overflow-wrap: anywhere; }
+.tier-compare thead th { color: var(--lilac); font-size: .8rem; font-weight: 650; border-bottom: 1px solid var(--line); }
+.tier-compare tbody th { font-weight: 450; color: var(--muted); }
+.tier-compare tr > :first-child { text-align: start; width: 29%; padding-inline-start: 0; }
+.tier-delta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .3rem .6rem; margin: .45rem 0; padding: .5rem .65rem; background: #292432; border-radius: .35rem; }
+.tier-credit { display: inline-flex; align-items: center; gap: .5rem; padding-block: .4rem; }
+.tier-credit input { accent-color: var(--lilac); width: 1.1rem; height: 1.1rem; }
+.tier-steps { font-size: .8rem; }
+.tier-steps summary { cursor: pointer; color: var(--lilac); padding: .35rem 0; }
+.tier-steps li { padding: .15rem 0; }
+.tier-steps ul { margin-top: .15rem; }
+.tier-steps > strong { display: block; margin-top: .4rem; }
 @media (min-width: 620px) {
   .profit-filters { grid-template-columns: minmax(12rem, 1.4fr) minmax(9rem, 1fr); }
   .rank-parts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(1rem, 2.5vw, 2.5rem); }

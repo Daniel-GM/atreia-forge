@@ -36,14 +36,14 @@ function remember(key, row) {
 
 function parseQuote(row, fetchedAt) {
   if (row.listed === false || row.listings === 0) {
-    return { price: null, capturedAt: null, availability: "unlisted", fetchedAt };
+    return { price: null, capturedAt: null, availability: "unlisted", listings: 0, fetchedAt };
   }
   const timestamp = Date.parse(row.captured_at);
   if (row.listed !== true || !(row.listings > 0) || !Number.isFinite(row.price)
     || row.price <= 0 || row.price > Number.MAX_SAFE_INTEGER || !Number.isFinite(timestamp)) {
     return unknown(fetchedAt);
   }
-  return { price: row.price, capturedAt: new Date(timestamp).toISOString(), availability: "listed", fetchedAt };
+  return { price: row.price, capturedAt: new Date(timestamp).toISOString(), availability: "listed", listings: row.listings, fetchedAt };
 }
 
 async function refresh(url, server, ids) {
@@ -105,12 +105,13 @@ export async function handleMarket(request) {
     }
   }
 
-  const prices = {}, captures = {}, availability = {};
+  const prices = {}, captures = {}, availability = {}, listings = {};
   let asOf = null, fetchedAt = null;
   for (const id of ids) {
     const row = latestQuote(server, id);
     prices[id] = row.price;
     availability[id] = row.availability;
+    listings[id] = row.listings ?? null;
     captures[id] = row.capturedAt;
     if (row.capturedAt && (!asOf || row.capturedAt < asOf)) asOf = row.capturedAt;
     if (row.fetchedAt && (!fetchedAt || row.fetchedAt < fetchedAt)) fetchedAt = row.fetchedAt;
@@ -118,5 +119,5 @@ export async function handleMarket(request) {
   let status = "ok";
   if (failed || (asOf && Date.parse(asOf) < now - staleAfter)) status = fetchedAt ? "stale" : "unavailable";
   const cache = failed ? "public, max-age=15" : "public, max-age=60, s-maxage=300";
-  return json({ server, source, sourceUrl, status, asOf, fetchedAt, prices, captures, availability }, 200, cache);
+  return json({ server, source, sourceUrl, status, asOf, fetchedAt, prices, captures, availability, listings }, 200, cache);
 }

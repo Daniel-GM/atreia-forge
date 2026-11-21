@@ -1,8 +1,8 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Archive, BookMarked, Bookmark, Calculator, Check, ChevronDown, ChevronRight, CircleUserRound, CookingPot, ExternalLink, FlaskConical, Gem, Globe2, Hammer, Home, LayoutGrid, ListTree, Minus, Plus, Search, Shield, Swords, TrendingUp, X } from 'lucide-react';
 import { integer, MAX_CRAFTS, MAX_STOCK } from '../shared/planner.js';
-import { fold } from './data.js';
-import { locales, regionName } from './i18n.js';
+import { fold, itemName } from './data.js';
+import { gradeName, locales, regionName } from './i18n.js';
 
 export const professions = ['blacksmithing', 'armorsmithing', 'handicrafting', 'alchemy', 'cooking'];
 export const professionIcons = { blacksmithing: Swords, armorsmithing: Shield, handicrafting: Gem, alchemy: FlaskConical, cooking: CookingPot };
@@ -19,6 +19,10 @@ export function ItemIcon({ item, large = false }) {
       ? <img src={item.icon} onError={() => setBroken(item.icon)} alt="" loading={large ? 'eager' : 'lazy'} />
       : <Gem size={large ? 29 : 17} aria-hidden="true" />}
   </span>;
+}
+
+export function ItemName({ item, language }) {
+  return <span className={'item-name grade-' + (item?.grade || 'common')} title={gradeName(item?.grade || 'common', language)}>{itemName(item, language)}</span>;
 }
 
 export function NumberField({ value, onChange, label, maximum = MAX_STOCK, minimum = 0, disabled = false, className = '' }) {

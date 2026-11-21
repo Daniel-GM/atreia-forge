@@ -3,6 +3,23 @@ import { attemptsFromBatch, craftOutputs, materialOptions, requirements } from '
 import { integer, MAX_CRAFTS, MAX_MARKET_FEE_BPS, netSaleValue } from './quantities.js';
 
 const tiers = ['common', 'rare', 'epic', 'unique'];
+// Only a distinct critical output of the preceding equipment tier can feed this slot.
+export function previousCraftTier(target, recipes, items) {
+  const tier = tiers.indexOf(items[target.itemId]?.grade);
+  if (target.mechanism !== 'craft' || tier < 1) return null;
+  for (const candidate of recipes) {
+    if (candidate.mechanism !== 'craft' || candidate.profession !== target.profession ||
+        candidate.category !== target.category || candidate.faction !== target.faction ||
+        items[candidate.itemId]?.grade !== tiers[tier - 1] || !candidate.combo?.chance ||
+        candidate.combo.itemId === candidate.itemId) continue;
+    for (const [index, material] of target.materials.entries()) {
+      const option = materialOptions(material).find(m => m.itemId === candidate.combo.itemId);
+      if (option) return { recipe: candidate, index, quantity: option.quantity };
+    }
+  }
+  return null;
+}
+
 function consumes(recipe, itemId) {
   for (const material of recipe.materials) {
     if (material.itemId === itemId) return material.quantity;
@@ -21,7 +38,7 @@ export function goldProgression(selected, catalog) {
   const family = catalog.recipes.filter(r => r.mechanism === 'craft' && r.profession === selected.profession && r.category === selected.category && r.faction === selected.faction);
   const path = [selected];
   for (let i = position - 1; i >= 0; i--) {
-    const previous = family.find(r => tier(r) === i && r.combo?.chance > 0 && consumes(path[0], r.combo.itemId));
+    const previous = previousCraftTier(path[0], family, catalog.items)?.recipe;
     if (!previous) return null;
     path.unshift(previous);
   }
