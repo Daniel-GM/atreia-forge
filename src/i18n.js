@@ -1,4 +1,5 @@
 import { lineMessages } from './lineMessages.js'
+import { profitMessages } from './profitMessages.js'
 
 // Questlog uses regional variants to select the corresponding game database.
 export const locales = [
@@ -1218,7 +1219,7 @@ const recipeTerms = {
 }
 
 const dictionaries = Object.fromEntries(Object.entries(messages).map(([language, ui]) => [
-  language, { ...ui, ...recipeTerms[language], ...lineMessages[language] },
+  language, { ...ui, ...recipeTerms[language], ...lineMessages[language], ...profitMessages[language] },
 ]))
 
 export function tFor(code) {

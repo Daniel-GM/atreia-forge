@@ -9,16 +9,17 @@ import { gameOrder, matchesFaction, useRecipeList } from './recipe-filter.js';
 import { CraftDialog, PriceDialog, RecipeBrowser, RecipeDetail } from './recipes.jsx';
 import { Inventory, SavedRecipes } from './collections.jsx';
 import { AddToLineDialog, Lines } from './lines.jsx';
-import { DeviceDialog } from './device.jsx';
+import { DeviceDialog, GoogleAccess } from './device.jsx';
+import { Profitability } from './profitability.jsx';
 
 function route(catalog) {
   const value = window.location.hash.slice(1).replace(/^\//, '');
   const match = /^(?:recipe\/|r)(\d+)$/.exec(value);
-  return { page: ['inventory', 'saved', 'lines'].includes(value) ? value : 'calculator', id: match && catalog.byId[match[1]] ? match[1] : null };
+  return { page: ['inventory', 'saved', 'lines', 'profitability'].includes(value) ? value : 'calculator', id: match && catalog.byId[match[1]] ? match[1] : null };
 }
 const mobileLayout = () => matchMedia('(max-width: 850px)').matches;
 
-export default function App({ catalog, servers, snapshot }) {
+export default function App({ catalog, servers, snapshot, account }) {
   const [prefs] = useState(readSettings);
   const [language, setLanguage] = useState(locales.some(l => l.code === prefs.language) ? prefs.language : 'pt');
   const [serverId, setServerId] = useState(servers.some(s => s.id === prefs.server) ? prefs.server : '1406');
@@ -36,7 +37,7 @@ export default function App({ catalog, servers, snapshot }) {
   const [category, setCategory] = useState('all');
   const [factionMode, setFactionMode] = useState(matchesFaction(calculatorRecipe, server.faction.toLowerCase()) ? 'server' : 'all');
   const [query, setQuery] = useState('');
-  const workshop = useWorkshop(catalog);
+  const workshop = useWorkshop(catalog, account);
   const [draftCount, changeCount] = useState(() => workshop.state.saved[selectedId] || 1);
   const [expandedId, setExpandedId] = useState(null);
   const expandedRecipe = page === 'saved' && workshop.state.saved[expandedId] ? catalog.byId[expandedId] : null;
@@ -136,14 +137,15 @@ export default function App({ catalog, servers, snapshot }) {
   function clearFilters() { setQuery(''); setCategory('all'); setFactionMode('server'); }
   const libraryProps = { recipes: filtered, categories, category, setCategory, profession, query, setQuery, selected: calculatorRecipe, select: openRecipe, onFilters: showFilters, filteredFaction: factionMode === 'server' ? '' : factionMode, catalog, language, t, format, clearFilters };
   const activeRow = plan.rows.find(row => row.itemId === editingMaterial);
+  function showAccount() { account.prepare(); setDialog('device'); }
   const questUrl = 'https://questlog.gg/aion-2/' + language + '/auction-house?server=' + server.id;
   const detail = <RecipeDetail key={recipe.id} {...{ recipe, catalog, language, locale, t, format, count, plan, market, saved }} embedded={!!expandedRecipe} setCount={changeCrafts}
     onSave={bookmark} onCraft={() => setDialog('craft')} onLine={() => setDialog('addToLine')} onStock={(itemId, value) => workshop.change({ type: 'stock', itemId, value })}
     onPrice={row => { setEditingMaterial(row.itemId); setDialog('price'); }} onInfo={() => setDialog('info')} onAlternatives={options => { setAlternatives(options); setDialog('alternatives'); }}/>;
   return <div className="app-shell">
-    <Navigation page={page} go={go} t={t} numSaved={Object.keys(workshop.state.saved).length} onDevice={() => setDialog('device')} questUrl={questUrl}/>
+    <Navigation page={page} go={go} t={t} member={!!account.user} numSaved={Object.keys(workshop.state.saved).length} onDevice={showAccount} questUrl={questUrl}/>
     <div className="main-column">
-      <Topbar page={page} t={t} server={server} locale={locale} onServer={() => setDialog('server')} onLanguage={() => setDialog('language')} onDevice={() => setDialog('device')} onHome={() => go('calculator')}/>
+      <Topbar page={page} t={t} server={server} locale={locale} onServer={() => setDialog('server')} onLanguage={() => setDialog('language')} onDevice={showAccount} onHome={() => go('calculator')}/>
       <main className="workbench">
         <Hero page={page} t={t}/>
         {page === 'calculator' ? <>
@@ -154,11 +156,12 @@ export default function App({ catalog, servers, snapshot }) {
             {detail}
           </div>
         </> : page === 'lines' ? <Lines {...{ catalog, workshop, lineId, language, locale, server, snapshot, t, format, profession }} onSelect={selectLine} notify={setToast}/>
+          : page === 'profitability' ? (account.user ? <Profitability key={server.id} {...{ catalog, workshop, account, server, language, locale, t, format, openRecipe }}/> : <section className="panel access-panel"><GoogleAccess account={account} t={t}/></section>)
           : page === 'inventory' ? <Inventory catalog={catalog} workshop={workshop} language={language} t={t} format={format}/> : <SavedRecipes {...{ savedCrafts, catalog, workshop, language, t, format, go, expandedId, detail }} loading={market.busy} onExpand={id => setExpandedId(current => current === id ? null : id)}/>}
       </main>
     </div>
     {['server', 'language'].includes(dialog) && <SelectionDialog key={dialog} kind={dialog} onClose={() => setDialog('')} t={t} server={server} servers={servers} language={language} onServer={chooseServer} onLanguage={code => { setLanguage(code); writeSettings({ language: code }); }}/>}
-    {dialog === 'device' && <DeviceDialog {...{ catalog, workshop, t, format }} onClose={() => setDialog('')} onImport={() => { setDialog(''); setToast({ label: 'imported' }); }}/>}
+    {dialog === 'device' && <DeviceDialog {...{ catalog, workshop, account, t, format }} onClose={() => setDialog('')} onImport={() => { setDialog(''); setToast({ label: 'imported' }); }}/>}
     {dialog === 'addToLine' && showingDetail && <AddToLineDialog {...{ recipe, count, catalog, workshop, t, language, format }} selectedId={lineId} onSelect={id => { selectLine(id); go('lines'); setToast({ label: 'lineAdded' }); }} onClose={() => setDialog('')}/>}
     {dialog === 'recipes' && <Modal className="library-dialog" title={t('recipes') + ' · ' + t(profession)} t={t} onClose={() => setDialog('')}><RecipeBrowser {...libraryProps} inModal/></Modal>}
     {dialog === 'filters' && <Modal title={t('filter')} onClose={() => setDialog(returnToList ? 'recipes' : '')} t={t}>

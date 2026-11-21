@@ -7,6 +7,10 @@ export function validMarketFeeBps(bps) {
   return Number.isInteger(bps) && bps >= 0 && bps <= MAX_MARKET_FEE_BPS;
 }
 
+export function netSaleValue(gross, feeBps) {
+  return gross * BigInt(MAX_MARKET_FEE_BPS - feeBps) / BigInt(MAX_MARKET_FEE_BPS);
+}
+
 // Store percentages as integer basis points. Accept either decimal separator.
 export function parseMarketFee(text) {
   const input = String(text).normalize('NFKC').trim();

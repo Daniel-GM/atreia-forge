@@ -13,7 +13,8 @@ Calculadora de craft de AION 2 em React e Tailwind CSS. O catálogo inclui os ma
 - Verde indica que continuar rende mais, vermelho que vender agora rende mais. Em **Ver cálculo**, consulte as quantidades e os preços unitários. Quando houver um próximo tier conhecido fora da linha, ele aparece como sugestão para simular a continuação.
 - Use **Registrar craft** na própria etapa para informar quantos combos obteve. Ao adicionar os resultados ao inventário, a próxima etapa que usa esses itens recebe a quantidade de tentativas correspondente. A baixa dos ingredientes e a entrada dos produtos são gravadas juntas.
 - Em **Crafts salvos**, toque na receita para abrir seus materiais e ajustar as quantidades na própria lista.
-- O estoque, as linhas e as receitas salvas ficam no navegador. Para transferi-los de dispositivo, use **Dados neste dispositivo → Exportar cópia / Importar cópia**.
+- Visitantes usam a oficina local. Em **Minha conta**, contas Google convidadas podem acessar sua oficina sincronizada e o menu **Rentabilidade**. Para trazer o estoque antigo, entre com Google, abra **Minha conta → Copiar dados deste dispositivo para a conta**, confira a prévia e confirme. A cópia original continua no navegador.
+- Em **Rentabilidade**, escolha a profissão ou busque a receita e ordene por lucro em Kinah ou margem. O cálculo usa o servidor e a taxa selecionados, inclusive preços manuais quando faltar uma cotação. A margem percentual usa a venda líquida como denominador. Abra **Faltam cotações** para preencher os preços que impedem a comparação.
 
 ## Executar
 
@@ -25,6 +26,12 @@ npm run dev
 ```
 
 `npm test` verifica o planejamento e as movimentações do estoque. `npm run build` gera o front-end em `dist`. `npm run preview` serve a compilação com o mesmo endpoint de mercado usado no desenvolvimento.
+
+### Configuração do acesso por convite
+
+A aplicação usa Google em Firebase Authentication e o Firestore do projeto `atreia-forge`. Configure a chave pública do app Web em `VITE_FIREBASE_API_KEY` antes do build (localmente em `.env.local`) e autorize o domínio em Authentication. A Vercel aplica a variável de produção no próximo deploy.
+
+As regras em `firestore.rules` permitem ler a própria autorização e acessar somente a oficina do próprio UID. No console administrativo, cada convite é um documento `members/{email-em-minúsculas}` com o campo booleano `enabled`. Defina-o como `false` para revogar acesso. A função de rentabilidade consulta essa mesma autorização no Firestore, usando o token Firebase da sessão, a cada requisição. As regras podem ser publicadas com `firebase deploy --only firestore:rules --project atreia-forge`.
 
 ## Dados e mercado
 

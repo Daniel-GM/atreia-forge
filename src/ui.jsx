@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { Archive, BookMarked, Bookmark, Calculator, Check, ChevronDown, ChevronRight, CookingPot, ExternalLink, FlaskConical, Gem, Globe2, Hammer, HardDrive, Home, ListTree, Minus, Plus, Search, Shield, Swords, X } from 'lucide-react';
+import { Archive, BookMarked, Bookmark, Calculator, Check, ChevronDown, ChevronRight, CircleUserRound, CookingPot, ExternalLink, FlaskConical, Gem, Globe2, Hammer, Home, ListTree, Minus, Plus, Search, Shield, Swords, TrendingUp, X } from 'lucide-react';
 import { integer, MAX_CRAFTS, MAX_STOCK } from '../shared/planner.js';
 import { fold } from './data.js';
 import { locales, regionName } from './i18n.js';
@@ -84,10 +84,10 @@ function Brand() {
   return <span className="brand"><img src="/forge-mark.svg" alt="" width="42" height="42"/><span>Atreia <em>Forge</em></span></span>;
 }
 
-export function Navigation({ page, go, t, numSaved, onDevice, questUrl }) {
-  const links = compact => Object.entries(pages).map(([key, Icon]) =>
+export function Navigation({ page, go, t, numSaved, onDevice, questUrl, member }) {
+  const links = compact => Object.entries(member ? { ...pages, profitability: TrendingUp } : pages).map(([key, Icon]) =>
     <button key={key} className={'nav-link' + (page === key ? ' active' : '')} aria-label={t(key)} title={t(key)} aria-current={page === key ? 'page' : undefined} onClick={() => go(key)}>
-      <Icon size={20} strokeWidth={1.65}/><span>{t(key === 'lines' && compact ? 'linesShort' : key)}</span>
+      <Icon size={20} strokeWidth={1.65}/><span>{t(compact && key === 'lines' ? 'linesShort' : compact && key === 'profitability' ? 'profit' : key)}</span>
       {key === 'saved' && numSaved > 0 && <span className="nav-count">{numSaved}</span>}
     </button>);
   return <>
@@ -100,8 +100,8 @@ export function Navigation({ page, go, t, numSaved, onDevice, questUrl }) {
           <a href={questUrl} target="_blank" rel="noreferrer"><BookMarked size={16}/> Questlog <ExternalLink size={13}/></a>
           <a href="https://aion2.exchange/" target="_blank" rel="noreferrer"><Globe2 size={16}/> Aion2 Exchange <ExternalLink size={13}/></a>
         </div>
-        <button className="profile-link" onClick={onDevice} aria-label={t('deviceData')} title={t('deviceData')}><span className="avatar"><HardDrive size={21}/></span>
-          <span><strong>{t('deviceData')}</strong></span>
+        <button className="profile-link" onClick={onDevice} aria-label={t('account')} title={t('account')}><span className="avatar"><CircleUserRound size={21}/></span>
+          <span><strong>{member ? t('connected') : t('account')}</strong><small>{member ? 'Google' : t('deviceData')}</small></span>
           <ChevronRight size={15} className="profile-chevron"/>
         </button>
       </div>
@@ -118,14 +118,14 @@ export function Topbar({ page, t, server, locale, onServer, onLanguage, onDevice
     <div className="top-actions">
       <button className="top-pill" onClick={onServer} aria-label={[t('server'), server.name, region].join(' · ')}><span className="server-glyph"><Globe2 size={15}/></span><span className="server-location"><span>{server.name}</span><span className="server-region">{region}</span></span><ChevronDown size={14}/></button>
       <button className="language-button" onClick={onLanguage} aria-label={t('language') + ' · ' + locale.label}><Globe2 size={16}/><span>{locale.short}</span><ChevronDown size={14}/></button>
-      <button onClick={onDevice} className="mobile-account icon-button" aria-label={t('deviceData')}><HardDrive size={20}/></button>
+      <button onClick={onDevice} className="mobile-account icon-button" aria-label={t('account')}><CircleUserRound size={20}/></button>
     </div>
   </header>;
 }
 
 export function Hero({ page, t }) {
   const heading = page === 'calculator' ? 'planner' : page;
-  const desc = { calculator: 'description', inventory: 'inventoryDesc', saved: 'savedDesc', lines: 'linesDesc' }[page];
+  const desc = { calculator: 'description', inventory: 'inventoryDesc', saved: 'savedDesc', lines: 'linesDesc', profitability: 'profitDesc' }[page];
   return <section className={'hero' + (page !== 'calculator' ? ' compact' : '')}>
     <div className="hero-inner"><div className="game-tag"><span className="title-diamond"/>AION 2</div>
       <h1>{t(heading)}</h1><p>{t(desc)}</p>

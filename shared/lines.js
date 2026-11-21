@@ -1,6 +1,6 @@
 import { unitQuote } from './planner.js';
 import { attemptsFromBatch, craftOutputs, materialOptions, requirements } from './crafting.js';
-import { integer, MAX_CRAFTS, MAX_MARKET_FEE_BPS } from './quantities.js';
+import { integer, MAX_CRAFTS, MAX_MARKET_FEE_BPS, netSaleValue } from './quantities.js';
 
 const tiers = ['common', 'rare', 'epic', 'unique'];
 function consumes(recipe, itemId) {
@@ -172,7 +172,7 @@ export function lineEstimate(line, catalog, workshop, server, quotes = {}, targe
   function saleLot(itemId, quantity) {
     const lot = priceLot(itemId, quantity);
     // The estimate settles one lot per item in whole Kinah, rounding proceeds down.
-    const net = lot.value == null ? null : lot.value * BigInt(MAX_MARKET_FEE_BPS - marketFeeBps) / BigInt(MAX_MARKET_FEE_BPS);
+    const net = lot.value == null ? null : netSaleValue(lot.value, marketFeeBps);
     return { ...lot, net, fee: net == null ? null : lot.value - net };
   }
   const owned = { ...workshop.stock };

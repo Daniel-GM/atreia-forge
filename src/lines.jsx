@@ -57,7 +57,7 @@ function ResultList({ entries, catalog, language, t, format, onPrice }) {
   })}</ul>;
 }
 
-function MarketFeeField({ bps, onChange, t, format }) {
+export function MarketFeeField({ bps, onChange, t, format }) {
   const id = useId();
   const [draft, setDraft] = useState(null);
   const invalid = draft != null && parseMarketFee(draft) == null;
