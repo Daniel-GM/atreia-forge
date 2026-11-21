@@ -46,14 +46,25 @@ function parseQuote(row, fetchedAt) {
   return { price: row.price, capturedAt: new Date(timestamp).toISOString(), availability: "listed", listings: row.listings, fetchedAt };
 }
 
+async function fetchItems(url, retry = true) {
+  let upstream;
+  try {
+    upstream = await fetch(url, { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8_000) });
+  } catch (error) {
+    if (retry && (error.name === "TimeoutError" || error instanceof TypeError)) return fetchItems(url, false);
+    throw error;
+  }
+  if (retry && [408, 502, 503, 504].includes(upstream.status)) {
+    await upstream.body?.cancel();
+    return fetchItems(url, false);
+  }
+  if (!upstream.ok) throw new Error("Market temporarily unavailable");
+  return upstream.json();
+}
+
 async function refresh(url, server, ids) {
   const version = ++requestVersion;
-  const upstream = await fetch(url, {
-    headers: { Accept: "application/json" },
-    signal: AbortSignal.timeout(8_000),
-  });
-  if (!upstream.ok) throw new Error("Market temporarily unavailable");
-  const data = await upstream.json();
+  const data = await fetchItems(url);
   if (!Array.isArray(data?.items) || !Number.isInteger(data.total) || data.items.length !== data.total) {
     throw new Error("Incomplete market response");
   }

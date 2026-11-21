@@ -64,7 +64,7 @@ export function Profitability({ catalog, workshop, account, server, language, lo
     });
     return { ...catalog, recipes };
   }, [catalog, kind]);
-  const { counts, categories, allRecipes, filtered } = useRecipeList(eligible, language, faction, profession, category, query, kind === 'average' ? 'both' : kind);
+  const { counts, categories, allRecipes, filtered } = useRecipeList(eligible, language, faction, profession, category, query, true);
   const visible = new Set(filtered.map(recipe => recipe.id));
   const rows = [], incomplete = [];
   for (const row of [...(data?.rows || []), ...(data?.incomplete || [])]) {

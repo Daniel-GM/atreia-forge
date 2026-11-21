@@ -24,8 +24,10 @@ Object.assign(maceQuotes, { '110740013': 11111060, '110730013': 19800000, '11074
 
 test('market keeps the server, lowest listed unit price and capture together, with no historical sale fallback', async t => {
   const captured = new Date().toISOString();
+  let calls = 0;
   t.mock.method(globalThis, 'fetch', async url => {
     assert.equal(new URL(url).searchParams.get('server'), '11406');
+    if (++calls === 1) return new Response(null, { status: 503 });
     return Response.json({ total: 2, items: [
       { item_key: 110730013, listed: true, listings: 5, price: 19800000, captured_at: captured, sold_avg_price: 123 },
       { item_key: 110740013, listed: false, listings: 0, price: null, last_price: 11111060 },
@@ -36,6 +38,7 @@ test('market keeps the server, lowest listed unit price and capture together, wi
   assert.deepEqual(result.listings, { '110730013': 5, '110740013': 0, '110740012': null });
   assert.deepEqual(result.availability, { '110730013': 'listed', '110740013': 'unlisted', '110740012': 'unknown' });
   assert.equal(result.captures['110730013'], captured);
+  assert.equal(calls, 2);
 });
 
 test('Ariel mace screenshot: each sale at full price and the probability-weighted average are different scenarios', () => {
@@ -57,9 +60,9 @@ test('Ariel mace screenshot: each sale at full price and the probability-weighte
   const extras = profitScenario(row, target, 'average', 'chain', 1000, true);
   assert.deepEqual(row.chain.byproducts.map(s => s.quantity), [12, 3]);
   assert.equal(extras.profit - chain.profit, 378);
-  assert.ok(matchesRecipeName(target, game.items, 'pt', 'brilhante do perito', 'both'));
-  assert.ok(matchesRecipeName(target, game.items, 'pt', 'maca de orichalcum do perito', 'combo'));
-  assert.ok(!matchesRecipeName(target, game.items, 'pt', 'brilhante', 'normal'));
+  assert.ok(matchesRecipeName(target, game.items, 'pt', 'brilhante do perito', true));
+  assert.ok(matchesRecipeName(target, game.items, 'pt', 'maca de orichalcum do perito', true));
+  assert.ok(!matchesRecipeName(target, game.items, 'pt', 'brilhante'));
 });
 
 test('a missing intermediate blocks buying it only, and unquoted leftovers are optional', () => {
